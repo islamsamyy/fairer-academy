@@ -1,0 +1,432 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { motion , Variants } from 'framer-motion';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { type: 'spring', stiffness: 100, damping: 20 },
+  },
+};
+
+export default function InstructorDashboard() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getInitialData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setUser(user);
+
+      // Fetch Profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      setProfile(profileData);
+
+      // Fetch instructor's courses
+      const { data: coursesData } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('instructor_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (coursesData) {
+        setCourses(coursesData);
+      }
+      setLoading(false);
+    }
+
+    getInitialData();
+  }, [router]);
+
+  return (
+    <div className="min-h-screen bg-surface font-body text-on-background selection:bg-primary-container selection:text-on-primary-container">
+      {/* Top Navigation Bar */}
+      <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm border-b border-surface-container-highest/20">
+        <div className="flex items-center justify-between px-8 h-20 w-full max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform outline-none">
+              <img
+                alt="Fairer Logo"
+                className="h-8 w-auto object-contain"
+                src="https://lh3.googleusercontent.com/aida/ADBb0ui2HQlH4wehKDIFaKTzAAckSSlEp01ZDpqHBp-Yp3Xye2uSD5tyyoDtonRUNNrmktf17V6fxm089lUSM3btWWjMN8bKck3QfY8__gPG3swJlkvPSQEtEp6RbYKD4vLTGiZgAzYe3S9tDSNnVFN_JK1jOCv3NCscNRt1YMj5y4rFn-RKfw1XFcA9rSaBS4OJw6NFTLiFD7WPj2PgNr1mkIdjmPLAzA0t1sGxB4LXmNEKL15HOLWPpHzzkBoINpSkbdMeRKKNDepbwA"
+              />
+              <span className="text-2xl font-black text-primary tracking-tighter font-headline">Fairer</span>
+            </Link>
+            
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-slate-500 hover:bg-surface-container rounded-lg transition-all active:scale-90 outline-none">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <Link href="/settings" className="p-2 text-slate-500 hover:bg-surface-container rounded-lg transition-all active:scale-90 outline-none">
+              <span className="material-symbols-outlined">settings</span>
+            </Link>
+            <Link href="/profile" className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-container outline-none hover:scale-105 transition-transform cursor-pointer">
+              <img
+                className="w-full h-full object-cover"
+                alt="Instructor profile avatar"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtotWlBghiIYYPch-EN5wJkMtV6YXvmTRiRwF-bUSymUkU_6myP8WsvbsetYJnkLEZQUPnmQ8r2zE5lF7jUR4r0GFCY4sfln3n3_F2nssZQoX0sjf9bFU054DFP0pJxbzgG7cz4nPV5W92KLhSi8U5jcyYmhSWbIWK3NPWvbiSx3RbjmHB6hlbzSpHMCheo3oQGCfpWqr-zl9rUJmk4aE5QjJ3ZOIIP3tL1U5uz2lniSMS1o9AXLjE91uF_LPlRebegZ6zuTUwGpY"
+              />
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex pt-20 h-screen overflow-hidden">
+        {/* Sidebar Navigation */}
+        <aside className="hidden lg:flex flex-col p-6 space-y-8 h-screen w-64 bg-surface-container-lowest/50 border-r border-surface-container-highest/50 z-10">
+          <div className="space-y-1">
+            <h3 className="font-headline font-bold text-on-surface px-3 py-2">The Academy</h3>
+            <p className="text-xs text-outline px-3 uppercase tracking-widest font-semibold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span>
+              Luminous Logic
+            </p>
+          </div>
+          <nav className="space-y-2 flex-grow">
+            <Link href="/dashboard/instructor" className="group flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 text-primary shadow-sm rounded-xl font-body text-sm font-medium transition-all duration-200 border border-surface-container-highest/20 outline-none">
+              <span className="material-symbols-outlined group-hover:scale-110 transition-transform" style={{ fontVariationSettings: "'FILL' 1" }}>
+                dashboard
+              </span>
+              <span>Overview</span>
+            </Link>
+            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">monitoring</span>
+              <span>Analytics</span>
+            </Link>
+            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">menu_book</span>
+              <span>Content</span>
+            </Link>
+            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">group</span>
+              <span>Community</span>
+            </Link>
+            <Link href="/settings" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">tune</span>
+              <span>Settings</span>
+            </Link>
+          </nav>
+          <div className="pt-6 border-t border-surface-container-highest/50">
+            <Link href="/courses/create" className="group w-full bg-gradient-to-br from-primary to-primary-container text-white py-3 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all outline-none">
+              <span className="material-symbols-outlined text-lg group-hover:rotate-90 transition-transform">add_circle</span>
+              Create New Course
+            </Link>
+          </div>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto w-full">
+          <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-10 pb-24 lg:pb-10">
+            {/* Header Section */}
+            <motion.header
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
+            >
+              <div className="max-w-2xl">
+                <h1 className="text-4xl font-bold tracking-tight text-on-background mb-2 font-headline">
+                  {loading ? 'Initializing...' : `Welcome back, ${profile?.full_name || 'Instructor'}.`}
+                </h1>
+                <p className="text-xl text-slate-500">
+                  Your <span className="text-primary font-semibold">Fairer</span> performance is updated in real-time.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button className="flex items-center gap-2 px-5 py-3 bg-white/50 backdrop-blur-md border border-outline-variant/20 rounded-xl font-semibold text-sm hover:bg-white transition-all outline-none">
+                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    share
+                  </span>
+                  Share Stats
+                </button>
+                <Link href="/courses/create" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/10 active:scale-95 transition-transform hover:shadow-primary/30 outline-none">
+                  <span className="material-symbols-outlined">rocket_launch</span>
+                  Launch New Module
+                </Link>
+              </div>
+            </motion.header>
+
+            <motion.div variants={containerVariants} initial="hidden" animate="visible">
+              {/* Metrics Bento Grid */}
+              <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">group</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                      <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                      0.0%
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-outline mb-1">Total Students</p>
+                  <h2 className="text-3xl font-bold text-on-surface font-headline">0</h2>
+                </div>
+                
+                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">payments</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                      <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                      0.0%
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-outline mb-1">Total Revenue</p>
+                  <h2 className="text-3xl font-bold text-on-surface font-headline">$0.00</h2>
+                </div>
+                
+                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        star
+                      </span>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs font-bold text-outline bg-surface-container px-2 py-1 rounded-full">
+                      <span className="material-symbols-outlined text-[14px]">horizontal_rule</span>
+                      0.0%
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-outline mb-1">Avg Rating</p>
+                  <h2 className="text-3xl font-bold text-on-surface font-headline">0.0 <span className="text-lg text-outline font-normal">/ 5.0</span></h2>
+                </div>
+                
+                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-2xl">school</span>
+                    </div>
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                      <span className="material-symbols-outlined text-[14px]">add</span>
+                      {courses.length}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium text-outline mb-1">Active Courses</p>
+                  <h2 className="text-3xl font-bold text-on-surface font-headline">{courses.filter(c => c.is_published).length}</h2>
+                </div>
+              </motion.div>
+
+              {/* Revenue Chart and Insights Section */}
+              <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-10">
+                <div className="lg:col-span-2 p-6 md:p-8 bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10">
+                  <div className="flex flex-wrap items-center justify-between mb-8 gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-on-surface font-headline">Revenue Tracking</h3>
+                      <p className="text-sm text-outline">Monthly earnings over the last 6 months</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="px-4 py-2 text-xs font-bold rounded-lg bg-surface-container text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all outline-none">
+                        Download CSV
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Simplified Bar Chart Representation */}
+                  <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 px-1 sm:px-2 pt-4 border-b border-outline-variant/20 pb-4">
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '35%' }} transition={{ duration: 1, ease: 'easeOut' }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-outline">JUL</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '50%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-outline">AUG</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '70%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-outline">SEP</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '60%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-outline">OCT</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '90%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary h-full rounded-t-lg shadow-lg shadow-primary/30"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-primary font-bold">NOV</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                      <motion.div initial={{ height: 0 }} animate={{ height: '65%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
+                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
+                      </motion.div>
+                      <span className="text-xs font-mono text-outline">DEC</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-6">
+                  <div className="p-6 bg-gradient-to-br from-secondary to-secondary-container rounded-3xl text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-secondary-container opacity-0 group-hover:opacity-50 transition-opacity"></div>
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-bold mb-2 font-headline">Completion Rate</h3>
+                      <div className="flex items-baseline gap-2 mb-4">
+                        <span className="text-4xl font-bold font-headline tracking-tighter">76.4%</span>
+                        <span className="text-xs opacity-80 font-medium">+2.1% from last month</span>
+                      </div>
+                      <div className="w-full bg-white/20 h-2 rounded-full mb-6 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: '76.4%' }} transition={{ duration: 1.5, ease: 'easeOut' }} className="bg-white h-full rounded-full"></motion.div>
+                      </div>
+                      <p className="text-sm opacity-90 leading-relaxed italic border-l-2 border-white/30 pl-3">"Exceeding industry benchmark by 18%."</p>
+                    </div>
+                    <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
+                      <span className="material-symbols-outlined text-9xl">auto_awesome</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 bg-tertiary-container rounded-3xl text-on-tertiary-container shadow-sm relative overflow-hidden group border border-tertiary/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="material-symbols-outlined text-tertiary bg-white/50 p-1.5 rounded-lg">military_tech</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-on-tertiary-container/80">Milestone Achieved</span>
+                    </div>
+                    <h3 className="text-lg font-bold mb-1 font-headline">Top Instructor</h3>
+                    <p className="text-sm opacity-90 mb-6 font-medium">Awarded for high student satisfaction scores 3 months in a row.</p>
+                    <button className="w-full py-2.5 bg-white/50 hover:bg-white/80 backdrop-blur text-xs font-bold rounded-xl border border-white/40 transition-all text-on-tertiary-container shadow-sm">
+                      View Rewards
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Course Performance Table */}
+              <motion.div variants={itemVariants} className="p-6 md:p-8 bg-surface-container-lowest rounded-3xl shadow-sm mb-10 overflow-hidden border border-outline-variant/10">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-on-surface font-headline">Course Performance</h3>
+                    <p className="text-sm text-outline mt-1">Detailed overview of your active curriculum</p>
+                  </div>
+                  <div className="flex items-center gap-1 border border-surface-container-highest bg-surface-container-low p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
+                    <button className="px-4 py-2 text-xs font-bold bg-white shadow-sm rounded-lg text-primary whitespace-nowrap outline-none">All Courses</button>
+                    <button className="px-4 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors whitespace-nowrap outline-none">Published</button>
+                    <button className="px-4 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors whitespace-nowrap outline-none">Drafts</button>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto hide-scrollbar">
+                  <table className="w-full border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="text-left border-b border-surface-container-highest/50">
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline pl-2">Course Title</th>
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline">Students</th>
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline">Avg Rating</th>
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline">Revenue</th>
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline">Status</th>
+                        <th className="pb-4 pt-2 font-headline text-sm font-bold text-outline pr-2 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-container-highest/30">
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-outline">Loading your portfolio...</td>
+                        </tr>
+                      ) : courses.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center">
+                            <p className="text-on-surface-variant mb-4">You haven't created any courses yet.</p>
+                            <Link href="/courses/create" className="text-primary font-bold hover:underline">Create your first course</Link>
+                          </td>
+                        </tr>
+                      ) : (
+                        courses.map((course) => (
+                          <tr key={course.id} className="group hover:bg-surface-container-low/50 transition-colors">
+                            <td className="py-4 pl-2">
+                              <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform overflow-hidden">
+                                  {course.thumbnail_url ? (
+                                    <img src={course.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                                  ) : (
+                                    <span className="material-symbols-outlined">menu_book</span>
+                                  )}
+                                </div>
+                                <div className="font-bold text-on-surface group-hover:text-primary transition-colors outline-none font-headline">
+                                  {course.title}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-4 font-mono text-sm font-medium text-on-surface-variant">0</td>
+                            <td className="py-4">
+                              <div className="flex items-center gap-1">
+                                <span className="text-sm font-bold text-on-surface-variant">0.0</span>
+                                <span className="material-symbols-outlined text-xs text-amber-500">star</span>
+                              </div>
+                            </td>
+                            <td className="py-4 font-mono text-sm font-bold text-on-surface">${course.price}</td>
+                            <td className="py-4">
+                              <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border ${
+                                course.is_published 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                : 'bg-surface-container-highest/50 text-outline border-outline-variant/30'
+                              }`}>
+                                {course.is_published ? 'Published' : 'Draft'}
+                              </span>
+                            </td>
+                            <td className="py-4 pr-2 text-right">
+                              <button className="p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none">
+                                <span className="material-symbols-outlined">more_horiz</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-8 flex justify-center">
+                  <button className="text-sm font-bold text-primary hover:text-primary/80 hover:underline transition-all outline-none flex items-center gap-1">
+                    View All 14 Courses
+                    <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+        </main>
+      </div>
+
+      {/* Floating Action Button - Mobile Only */}
+      <Link href="/courses/create" className="fixed bottom-6 right-6 lg:hidden z-40 outline-none">
+        <button className="h-14 w-14 bg-gradient-to-br from-primary to-primary-container rounded-full shadow-lg shadow-primary/30 text-white flex items-center justify-center active:scale-95 transition-transform outline-none">
+          <span className="material-symbols-outlined text-2xl">add</span>
+        </button>
+      </Link>
+    </div>
+  );
+}
