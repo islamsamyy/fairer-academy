@@ -1,0 +1,61 @@
+version: "2"
+type: frontend
+tech_stack:
+  - TypeScript
+  - Next.js 16
+  - React 19
+  - Tailwind CSS
+  - Supabase
+  - Shadcn UI
+  - framer-motion
+routes:
+  - path: /login
+    file: src/app/login/page.tsx
+    auth_required: false
+    description: User login page
+  - path: /signup
+    file: src/app/signup/page.tsx
+    auth_required: false
+    description: User signup page
+  - path: /dashboard
+    file: src/app/dashboard/page.tsx
+    auth_required: true
+    description: User dashboard
+  - path: /courses
+    file: src/app/courses/page.tsx
+    auth_required: false
+    description: Courses list
+  - path: /profile
+    file: src/app/profile/page.tsx
+    auth_required: true
+    description: User profile
+features:
+  - name: User Login
+    description: Login with email and password credentials
+    files:
+      - src/app/login/page.tsx
+    entry_route: /login
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - Click Login button to submit
+    auth_required: false
+  - name: User Signup
+    description: Create an account using email and password
+    files:
+      - src/app/signup/page.tsx
+    entry_route: /signup
+    user_interactions:
+      - Fill email input field
+      - Fill password input field
+      - Click Signup button to submit
+    auth_required: false
+  - name: View Dashboard
+    description: View personalized dashboard with learning progress
+    files:
+      - src/app/dashboard/page.tsx
+    entry_route: /dashboard
+    user_interactions:
+      - View enrolled courses and stats
+    auth_required: true
+known_limitations: []

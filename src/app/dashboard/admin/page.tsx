@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { motion , Variants } from 'framer-motion';;
+import React, { useState, useEffect } from 'react';
+import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -25,6 +27,44 @@ const itemVariants: Variants = {
 };
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [stats, setStats] = useState<any>(null);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+      if (profile?.role !== 'admin') {
+        router.push('/dashboard'); // redirect non-admins
+        return;
+      }
+
+      const { data: platformStats } = await supabase.from('platform_stats').select('*').maybeSingle();
+      if (platformStats) {
+        setStats(platformStats);
+      }
+
+      const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(5);
+      if (usersData) {
+        setRecentUsers(usersData);
+      }
+
+      setLoading(false);
+    }
+    loadData();
+  }, [router]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center font-bold text-primary">Loading Admin Console...</div>;
+  }
+
   return (
     <div className="bg-surface text-on-background font-body min-h-screen selection:bg-primary-container/30">
       {/* Top Navigation Anchor */}
@@ -104,37 +144,37 @@ export default function AdminDashboardPage() {
               <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-primary-container shadow-sm hover:shadow-md transition-shadow group">
                 <div className="flex justify-between items-start mb-4">
                   <span className="material-symbols-outlined text-primary bg-primary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">group</span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">+12.4%</span>
+                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">+{stats?.new_users_30d || 0} this month</span>
                 </div>
                 <p className="text-outline text-xs font-semibold uppercase tracking-wider">Total Active Users</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">84,291</p>
+                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.total_users || 0}</p>
               </motion.div>
               {/* Metric Card */}
               <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-secondary shadow-sm hover:shadow-md transition-shadow group">
                 <div className="flex justify-between items-start mb-4">
                   <span className="material-symbols-outlined text-secondary bg-secondary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">payments</span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">+5.2%</span>
+                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">MRR</span>
                 </div>
                 <p className="text-outline text-xs font-semibold uppercase tracking-wider">MRR (Revenue)</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">$412.8k</p>
+                <p className="text-3xl font-headline font-bold text-on-surface mt-1">${(stats?.mrr || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
               </motion.div>
               {/* Metric Card */}
               <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-tertiary shadow-sm hover:shadow-md transition-shadow group">
                 <div className="flex justify-between items-start mb-4">
                   <span className="material-symbols-outlined text-tertiary bg-tertiary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">school</span>
-                  <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded-full">Stable</span>
+                  <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded-full">Active</span>
                 </div>
                 <p className="text-outline text-xs font-semibold uppercase tracking-wider">Active Courses</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">1,402</p>
+                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.published_courses || 0}</p>
               </motion.div>
               {/* Metric Card */}
-              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-error shadow-sm hover:shadow-md transition-shadow group">
+              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow group">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="material-symbols-outlined text-error bg-error-container/30 p-2 rounded-lg group-hover:scale-110 transition-transform">confirmation_number</span>
-                  <span className="text-[11px] font-mono font-bold text-error bg-error-container/20 border border-error-container/50 px-2 py-1 rounded-full">High</span>
+                  <span className="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg group-hover:scale-110 transition-transform">local_library</span>
+                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-full">Active</span>
                 </div>
-                <p className="text-outline text-xs font-semibold uppercase tracking-wider">Open Tickets</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">42</p>
+                <p className="text-outline text-xs font-semibold uppercase tracking-wider">Total Enrollments</p>
+                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.total_enrollments || 0}</p>
               </motion.div>
             </motion.div>
           </motion.section>
@@ -294,69 +334,35 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-container-highest/20">
-                    <tr className="hover:bg-surface-container-low/50 transition-colors">
-                      <td className="py-4 pl-2">
-                        <div className="flex items-center gap-3">
-                          <img alt="User Avatar" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB16zo3RGrVOeY0Bd5JW0NSXedrdG3z1skttuofI4iYX0sLdXBZflgOCMvg0ZPnpUJwiHv_BwaBFCznc91G0Z_i1WfXoTIxqAQjplE7He7aGP-oUsUzvUityEvRKXxPSqKZMHc8SRiAYWRV-6IkV1a8hhgcjG2hxk_ldjUQ4Stn0sl4sCoMVlM7pyNMRE4CKcn1_KuUNIBlFDMPbfGjO9gJjjWYXEjJZXC1ItX9xec7E3tj_uMUPcb2VLzHbpXayFnBrbkzwDaxYXo"/>
-                          <div>
-                            <p className="text-sm font-bold text-on-surface hover:text-primary transition-colors cursor-pointer">Julian Veldt</p>
-                            <p className="text-[10px] sm:text-[11px] text-outline mt-0.5">julian@v-tech.io</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-xs font-semibold text-on-surface-variant">Student</td>
-                      <td className="py-4 text-xs font-mono text-outline">2023.10.24</td>
-                      <td className="py-4">
-                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200">Verified</span>
-                      </td>
-                      <td className="py-4 text-right pr-2">
-                        <button className="p-1.5 hover:bg-surface-container text-outline hover:text-on-surface rounded-lg transition-colors outline-none">
-                          <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-surface-container-low/50 transition-colors">
-                      <td className="py-4 pl-2">
-                        <div className="flex items-center gap-3">
-                          <img alt="User Avatar" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAltYcGa5n9JfH7TnQoKDFbYEXqpEgMBPxf36-KwNB1Lsmqj_lo4tHLz4qjMJ43l4IQd9Jb85Fftt-kMZ1cI7Aa-T7Ih3NF446DWdBFw3Eiw_OhmDhAzZB9iO3832Z2SR0Nvd_osoGkASsLzZT3TaodUdyFwyveNfpkU0q_GFivZDdZu9i7wLkD-giWljXrOV7LGLN24MaROT_hGmAheA8tLbkScQ_JSQyAZTXrZReMTcMpjjQXAkLXL1CzCLS8lxhCTQJLSv3mkIk"/>
-                          <div>
-                            <p className="text-sm font-bold text-on-surface hover:text-primary transition-colors cursor-pointer">Sarah Jenkins</p>
-                            <p className="text-[10px] sm:text-[11px] text-outline mt-0.5">s.jenkins@eth.edu</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-xs font-semibold text-secondary">Instructor</td>
-                      <td className="py-4 text-xs font-mono text-outline">2023.10.24</td>
-                      <td className="py-4">
-                        <span className="bg-tertiary-container/30 text-tertiary-fixed-dim text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-tertiary-container text-amber-700">Pending</span>
-                      </td>
-                      <td className="py-4 text-right pr-2">
-                        <button className="p-1.5 hover:bg-surface-container text-outline hover:text-on-surface rounded-lg transition-colors outline-none">
-                          <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                        </button>
-                      </td>
-                    </tr>
-                    <tr className="hover:bg-surface-container-low/50 transition-colors">
-                      <td className="py-4 pl-2">
-                        <div className="flex items-center gap-3">
-                          <img alt="User Avatar" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu0msTnxnOImlwSslqyPiqyjV1qphtFCaL2DdC5o2wafEBjT87befx9hquJc6K5O4b9st1yU5FpUuz49Mc3Fs1WVQjxOqdfQAtJGAeYdg9zonUnBKdbuvBxwn_Pi77iF-9SdohvEGVSCNwIDpe9iwNkR9Jru0aCMTkLJ1seCGzOKuBhJ8qsDjLtKEBbmpseBWJFSFAAOTjrFMKsGPlYP8eHqLgRgo1HUakQ-6Uc2DRNg_q1JwUIkOi_hBTWE8Ax5ZQspB2ayXeL8Y"/>
-                          <div>
-                            <p className="text-sm font-bold text-on-surface hover:text-primary transition-colors cursor-pointer">Marcus Thorne</p>
-                            <p className="text-[10px] sm:text-[11px] text-outline mt-0.5">mthorne@quant.com</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 text-xs font-semibold text-on-surface-variant">Student</td>
-                      <td className="py-4 text-xs font-mono text-outline">2023.10.23</td>
-                      <td className="py-4">
-                        <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200">Verified</span>
-                      </td>
-                      <td className="py-4 text-right pr-2">
-                        <button className="p-1.5 hover:bg-surface-container text-outline hover:text-on-surface rounded-lg transition-colors outline-none">
-                          <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                        </button>
-                      </td>
-                    </tr>
+                    {recentUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-outline">No users found.</td>
+                      </tr>
+                    ) : (
+                      recentUsers.map((user) => (
+                        <tr key={user.id} className="hover:bg-surface-container-low/50 transition-colors">
+                          <td className="py-4 pl-2">
+                            <div className="flex items-center gap-3">
+                              <img alt="User Avatar" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-surface-container-highest object-cover" src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=random`}/>
+                              <div>
+                                <p className="text-sm font-bold text-on-surface hover:text-primary transition-colors cursor-pointer">{user.full_name || 'Anonymous'}</p>
+                                <p className="text-[10px] sm:text-[11px] text-outline mt-0.5">{user.email || 'No Email'}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 text-xs font-semibold text-on-surface-variant capitalize">{user.role || 'Student'}</td>
+                          <td className="py-4 text-xs font-mono text-outline">{new Date(user.created_at).toLocaleDateString()}</td>
+                          <td className="py-4">
+                            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200">Verified</span>
+                          </td>
+                          <td className="py-4 text-right pr-2">
+                            <button className="p-1.5 hover:bg-surface-container text-outline hover:text-on-surface rounded-lg transition-colors outline-none">
+                              <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

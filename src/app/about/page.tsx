@@ -41,7 +41,7 @@ export default function AboutPage() {
           >
             <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">The Academy</h2>
             <p className="text-on-surface-variant leading-relaxed">
-              With over 50,0- students globally, Faireer Academy is the leading institution for Neutral Architecture, Prompt Engineering, and AI Ethics.
+              With over 50,000+ students globally, Faireer Academy is the leading institution for Neutral Architecture, Prompt Engineering, and AI Ethics.
             </p>
           </motion.div>
         </div>

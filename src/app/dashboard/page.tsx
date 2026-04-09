@@ -23,6 +23,7 @@ function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
+  const [certificates, setCertificates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -61,6 +62,20 @@ function DashboardContent() {
       if (enrollmentsData) {
         setEnrollments(enrollmentsData);
       }
+      
+      // Fetch Certificates
+      const { data: certData } = await supabase
+        .from('certificates')
+        .select(`
+          *,
+          courses (title)
+        `)
+        .eq('user_id', user.id);
+      
+      if (certData) {
+        setCertificates(certData);
+      }
+      
       setLoading(false);
     }
 
@@ -161,10 +176,10 @@ function DashboardContent() {
             <motion.div variants={fadeUpVariant} className="bg-surface-container-lowest p-6 rounded-xl border border-tertiary-container/5 hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between mb-4">
                 <span className="material-symbols-outlined text-tertiary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-                <span className="text-tertiary text-xs font-mono">Latest: AI-UX</span>
+                <span className="text-tertiary text-xs font-mono">Latest: {certificates.length > 0 ? certificates[0].courses?.title : 'None'}</span>
               </div>
               <p className="text-on-surface-variant text-sm font-medium">Certificates</p>
-              <h3 className="text-3xl font-headline font-bold">3 Earned</h3>
+              <h3 className="text-3xl font-headline font-bold">{certificates.length} Earned</h3>
             </motion.div>
             {/* Stat Card: Time */}
             <motion.div variants={fadeUpVariant} className="bg-surface-container-lowest p-6 rounded-xl border border-primary-container/5 hover:shadow-lg transition-shadow">
@@ -173,7 +188,7 @@ function DashboardContent() {
                 <span className="text-primary text-xs font-mono">Avg 2.5h</span>
               </div>
               <p className="text-on-surface-variant text-sm font-medium">Study Time</p>
-              <h3 className="text-3xl font-headline font-bold">48.2 hrs</h3>
+              <h3 className="text-3xl font-headline font-bold">{enrollments.length * 15.5} hrs</h3>
             </motion.div>
           </motion.section>
 
@@ -323,37 +338,34 @@ function DashboardContent() {
           <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9, duration: 0.6 }} className="mb-12">
             <h2 className="font-headline text-2xl font-bold mb-6">Certificates</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Cert 1 */}
-              <div className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl border border-outline-variant/10 hover:shadow-md transition-shadow">
-                <div className="w-24 h-24 bg-surface-container-lowest rounded-lg flex-none flex items-center justify-center border border-white shadow-sm bg-[linear-gradient(135deg,#ffba49_0%,#ffddb1_50%,#ffba49_100%)]">
-                  <span className="material-symbols-outlined text-4xl text-on-tertiary-container">verified</span>
+              {loading ? (
+                <div className="col-span-2 py-8 text-center text-outline">Loading certificates...</div>
+              ) : certificates.length === 0 ? (
+                <div className="col-span-2 py-8 text-center bg-surface-container-low rounded-xl">
+                  <p className="text-on-surface-variant mb-2">You haven't earned any certificates yet.</p>
+                  <p className="text-xs text-outline">Complete a course to earn your first certificate!</p>
                 </div>
-                <div className="flex-grow">
-                  <h4 className="font-headline font-bold text-lg mb-1">Visual Hierarchy Specialist</h4>
-                  <p className="text-on-surface-variant text-xs mb-4">Issued: Oct 12, 2023</p>
-                  <div className="flex gap-2">
-                    <button className="px-4 py-2 bg-on-background text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:-translate-y-0.5 transition-transform active:scale-95">
-                      <span className="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
-                    </button>
-                    <button className="px-4 py-2 border border-outline text-on-surface-variant text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-surface-container-high hover:-translate-y-0.5 transition-all">
-                      <span className="material-symbols-outlined text-sm">share</span> LinkedIn
-                    </button>
+              ) : (
+                certificates.map((cert) => (
+                  <div key={cert.id} className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl border border-outline-variant/10 hover:shadow-md transition-shadow">
+                    <div className="w-24 h-24 bg-surface-container-lowest rounded-lg flex-none flex items-center justify-center border border-white shadow-sm bg-[linear-gradient(135deg,#ffba49_0%,#ffddb1_50%,#ffba49_100%)]">
+                      <span className="material-symbols-outlined text-4xl text-on-tertiary-container">verified</span>
+                    </div>
+                    <div className="flex-grow">
+                      <h4 className="font-headline font-bold text-lg mb-1">{cert.courses?.title || 'Course Completed'}</h4>
+                      <p className="text-on-surface-variant text-xs mb-4">Issued: {new Date(cert.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                      <div className="flex gap-2">
+                        <button className="px-4 py-2 bg-on-background text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:-translate-y-0.5 transition-transform active:scale-95">
+                          <span className="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
+                        </button>
+                        <button className="px-4 py-2 border border-outline text-on-surface-variant text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-surface-container-high hover:-translate-y-0.5 transition-all">
+                          <span className="material-symbols-outlined text-sm">share</span> LinkedIn
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              {/* Cert 2 */}
-              <div className="flex items-center gap-6 p-6 bg-surface-container-low rounded-xl border border-outline-variant/10 opacity-70 cursor-not-allowed">
-                <div className="w-24 h-24 bg-surface-container-lowest rounded-lg flex-none flex items-center justify-center border border-white shadow-sm">
-                  <span className="material-symbols-outlined text-4xl text-outline">lock_open</span>
-                </div>
-                <div className="flex-grow">
-                  <h4 className="font-headline font-bold text-lg mb-1">Advanced Interaction Theory</h4>
-                  <p className="text-on-surface-variant text-xs mb-4">Pending Completion</p>
-                  <div className="flex gap-2">
-                    <span className="text-[10px] font-bold text-primary px-2 py-1 bg-primary/10 rounded">3 LESSONS REMAINING</span>
-                  </div>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </motion.section>
         </div>

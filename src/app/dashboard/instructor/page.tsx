@@ -51,12 +51,11 @@ export default function InstructorDashboard() {
         .single();
       setProfile(profileData);
 
-      // Fetch instructor's courses
+      // Fetch instructor's courses with stats from 'course_stats' view
       const { data: coursesData } = await supabase
-        .from('courses')
+        .from('course_stats')
         .select('*')
-        .eq('instructor_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('instructor_id', user.id);
       
       if (coursesData) {
         setCourses(coursesData);
@@ -176,66 +175,76 @@ export default function InstructorDashboard() {
             </motion.header>
 
             <motion.div variants={containerVariants} initial="hidden" animate="visible">
-              {/* Metrics Bento Grid */}
-              <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-2xl">group</span>
-                    </div>
-                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-                      <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                      0.0%
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-outline mb-1">Total Students</p>
-                  <h2 className="text-3xl font-bold text-on-surface font-headline">0</h2>
-                </div>
+              {/* Computed Aggregates */}
+              {(() => {
+                const totalStudents = courses.reduce((sum, c) => sum + Number(c.student_count || 0), 0);
+                const totalRevenue = courses.reduce((sum, c) => sum + Number(c.total_revenue || 0), 0);
+                const avgRating = courses.length ? (courses.reduce((sum, c) => sum + Number(c.avg_rating || 0), 0) / courses.length).toFixed(1) : "0.0";
+                const publishedCount = courses.filter(c => c.is_published).length;
                 
-                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-2xl">payments</span>
+                return (
+                  <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+                    <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-2xl">group</span>
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                          <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-outline mb-1">Total Students</p>
+                      <h2 className="text-3xl font-bold text-on-surface font-headline">{totalStudents}</h2>
                     </div>
-                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-                      <span className="material-symbols-outlined text-[14px]">trending_up</span>
-                      0.0%
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-outline mb-1">Total Revenue</p>
-                  <h2 className="text-3xl font-bold text-on-surface font-headline">$0.00</h2>
-                </div>
-                
-                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        star
-                      </span>
+                    
+                    <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-2xl">payments</span>
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                          <span className="material-symbols-outlined text-[14px]">trending_up</span>
+                          Active
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-outline mb-1">Total Revenue</p>
+                      <h2 className="text-3xl font-bold text-on-surface font-headline">${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h2>
                     </div>
-                    <span className="flex items-center gap-1 text-xs font-bold text-outline bg-surface-container px-2 py-1 rounded-full">
-                      <span className="material-symbols-outlined text-[14px]">horizontal_rule</span>
-                      0.0%
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-outline mb-1">Avg Rating</p>
-                  <h2 className="text-3xl font-bold text-on-surface font-headline">0.0 <span className="text-lg text-outline font-normal">/ 5.0</span></h2>
-                </div>
-                
-                <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-2xl">school</span>
+                    
+                    <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                            star
+                          </span>
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-bold text-outline bg-surface-container px-2 py-1 rounded-full">
+                          <span className="material-symbols-outlined text-[14px]">horizontal_rule</span>
+                          Average
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-outline mb-1">Avg Rating</p>
+                      <h2 className="text-3xl font-bold text-on-surface font-headline">{avgRating} <span className="text-lg text-outline font-normal">/ 5.0</span></h2>
                     </div>
-                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-                      <span className="material-symbols-outlined text-[14px]">add</span>
-                      {courses.length}
-                    </span>
-                  </div>
-                  <p className="text-sm font-medium text-outline mb-1">Active Courses</p>
-                  <h2 className="text-3xl font-bold text-on-surface font-headline">{courses.filter(c => c.is_published).length}</h2>
-                </div>
-              </motion.div>
+                    
+                    <div className="p-6 bg-surface-container-lowest rounded-2xl shadow-sm border border-transparent hover:border-primary/20 transition-colors group">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="p-3 bg-primary-container/20 rounded-xl text-primary group-hover:scale-110 transition-transform">
+                          <span className="material-symbols-outlined text-2xl">school</span>
+                        </div>
+                        <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+                          <span className="material-symbols-outlined text-[14px]">add</span>
+                          {courses.length}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-outline mb-1">Active Courses</p>
+                      <h2 className="text-3xl font-bold text-on-surface font-headline">{publishedCount}</h2>
+                    </div>
+                  </motion.div>
+                );
+              })()}
+
 
               {/* Revenue Chart and Insights Section */}
               <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-10">
@@ -381,14 +390,14 @@ export default function InstructorDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="py-4 font-mono text-sm font-medium text-on-surface-variant">0</td>
+                            <td className="py-4 font-mono text-sm font-medium text-on-surface-variant">{course.student_count || 0}</td>
                             <td className="py-4">
                               <div className="flex items-center gap-1">
-                                <span className="text-sm font-bold text-on-surface-variant">0.0</span>
+                                <span className="text-sm font-bold text-on-surface-variant">{Number(course.avg_rating || 0).toFixed(1)}</span>
                                 <span className="material-symbols-outlined text-xs text-amber-500">star</span>
                               </div>
                             </td>
-                            <td className="py-4 font-mono text-sm font-bold text-on-surface">${course.price}</td>
+                            <td className="py-4 font-mono text-sm font-bold text-on-surface">${Number(course.total_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td className="py-4">
                               <span className={`px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-full border ${
                                 course.is_published 
