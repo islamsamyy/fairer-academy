@@ -47,6 +47,15 @@ export default function SignupPage() {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
+    const nationalId = formData.get('nationalId') as string;
+
+    // Validate National ID format (10 digits, starts with 1 or 2)
+    const idRegex = /^[12][0-9]{9}$/;
+    if (!idRegex.test(nationalId)) {
+      setError(t('signup.nationalIdError'));
+      setLoading(false);
+      return;
+    }
 
     try {
       // 1. Sign up the user with metadata
@@ -57,6 +66,7 @@ export default function SignupPage() {
           data: {
             full_name: fullName,
             role: role,
+            national_id: nationalId,
           }
         }
       });
@@ -194,6 +204,32 @@ export default function SignupPage() {
                     data-icon="person"
                   >
                     person
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* National ID Input */}
+              <motion.div variants={itemVariants} className="space-y-2">
+                <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="nationalId">
+                  {t('signup.nationalIdLabel')}
+                </label>
+                <div className="relative group">
+                  <input
+                    className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
+                    id="nationalId"
+                    name="nationalId"
+                    placeholder={t('signup.nationalIdPlaceholder')}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={10}
+                    pattern="[12][0-9]{9}"
+                    required
+                  />
+                  <span
+                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
+                    data-icon="id_card"
+                  >
+                    id_card
                   </span>
                 </div>
               </motion.div>
