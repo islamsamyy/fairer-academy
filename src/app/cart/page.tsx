@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -17,6 +18,7 @@ const itemVariants: Variants = {
 import { useCart } from '@/context/CartContext';
 
 export default function CartPage() {
+  const { t } = useLanguage();
   const { cart, removeFromCart, subtotal } = useCart();
   const savings = cart.length * 50; // Simple mock savings logic for now
 
@@ -27,10 +29,10 @@ export default function CartPage() {
           <div className="w-24 h-24 bg-surface-container-low rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-4xl text-outline">shopping_basket</span>
           </div>
-          <h1 className="text-3xl font-headline font-bold text-on-surface">Your basket is empty</h1>
+          <h1 className="text-3xl font-headline font-bold text-on-surface">{t('cart.empty')}</h1>
           <p className="text-on-surface-variant max-w-sm mx-auto">Explore our world-class courses and start your journey from learning to earning.</p>
           <Link href="/courses" className="inline-block px-10 py-4 bg-primary text-white rounded-xl font-bold uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">
-            Browse Programs
+            {t('cart.exploreCourses')}
           </Link>
         </motion.div>
       </div>
@@ -41,8 +43,8 @@ export default function CartPage() {
     <div className="bg-surface font-body text-on-background min-h-screen">
       <main className="pt-8 pb-24 max-w-6xl mx-auto px-4 sm:px-8">
         <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">Shopping Cart</h1>
-          <p className="text-on-surface-variant mt-2">{cart.length} {cart.length === 1 ? 'course' : 'courses'} in your knowledge basket</p>
+          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">{t('cart.title')}</h1>
+          <p className="text-on-surface-variant mt-2">{cart.length} {cart.length === 1 ? t('cart.course') : t('cart.courses')} in your knowledge basket</p>
         </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -60,11 +62,11 @@ export default function CartPage() {
                   </div>
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-3">
-                      <button 
+                      <button
                         onClick={() => removeFromCart(item.id)}
                         className="text-xs text-destructive font-bold hover:underline outline-none"
                       >
-                        Remove
+                        {t('cart.remove')}
                       </button>
                     </div>
                     <div className="text-right">
@@ -82,7 +84,7 @@ export default function CartPage() {
               <h2 className="font-headline font-bold text-xl text-on-surface mb-6">Order Summary</h2>
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">Subtotal</span>
+                  <span className="text-on-surface-variant">{t('cart.subtotal')}</span>
                   <span className="font-bold font-mono text-on-surface">${subtotal}</span>
                 </div>
                 <div className="border-t border-outline-variant/20 pt-4 flex justify-between">
@@ -92,7 +94,7 @@ export default function CartPage() {
               </div>
 
               <Link href="/checkout" className="block w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold text-center shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all">
-                Proceed to Checkout
+                {t('cart.checkout')}
               </Link>
 
               <div className="mt-6 flex items-center gap-2 justify-center text-xs text-outline">

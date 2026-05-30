@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
@@ -15,6 +16,7 @@ const itemVariants: Variants = {
 
 export default function CheckoutPage() {
   const { cart, subtotal, clearCart } = useCart();
+  const { t } = useLanguage();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -84,7 +86,7 @@ export default function CheckoutPage() {
     <div className="bg-surface font-body text-on-background min-h-screen">
       <main className="pt-8 pb-24 max-w-5xl mx-auto px-4 sm:px-8">
         <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">Checkout</h1>
+          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">{t('checkout.title')}</h1>
           <p className="text-on-surface-variant mt-2">Complete your enrollment to unlock your courses</p>
         </motion.header>
 
