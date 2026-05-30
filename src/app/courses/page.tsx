@@ -218,7 +218,9 @@ export default function Courses() {
                     <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
                       <div>
                         <span className="text-[10px] text-slate-400 uppercase font-mono block mb-1">{t('courses.tuitionLabel')}</span>
-                        <span className="text-xl font-heading font-bold text-on-surface">${course.price}</span>
+                        <span className="text-xl font-heading font-bold text-on-surface">
+                          {course.price === 0 ? 'Free' : `$${course.price}`}
+                        </span>
                       </div>
                       <Link href={`/courses/${course.id}`} className="bg-surface-container-low text-primary px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all">
                         {t('courses.viewCourse')}

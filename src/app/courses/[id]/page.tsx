@@ -91,6 +91,30 @@ export default function CourseDetailPage() {
     router.push('/cart');
   };
 
+  const handleEnrollFree = async () => {
+    if (!course) return;
+    if (!user) {
+      router.push(`/login?redirectTo=/courses/${course.id}`);
+      return;
+    }
+    setEnrolling(true);
+    try {
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          student_id: user.id,
+          course_id: course.id,
+        });
+      if (enrollError) throw enrollError;
+      setIsEnrolled(true);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to enroll. Please try again.');
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: 'info' },
     { id: 'curriculum', label: 'Curriculum', icon: 'menu_book' },
@@ -336,7 +360,9 @@ export default function CourseDetailPage() {
                   <div className="mb-6">
                     <span className="text-[10px] text-outline uppercase font-mono block mb-1">Tuition</span>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-headline font-bold text-on-surface">${course.price}</span>
+                      <span className="text-4xl font-headline font-bold text-on-surface">
+                        {course.price === 0 ? 'Free' : `$${course.price}`}
+                      </span>
                       {course.price > 0 && (
                         <span className="text-lg text-outline line-through">${(course.price * 1.6).toFixed(0)}</span>
                       )}
@@ -350,6 +376,14 @@ export default function CourseDetailPage() {
                     <Link href={`/courses/lesson?id=${course.id}`} className="block w-full bg-emerald-500 text-white py-4 rounded-xl font-bold text-center shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 active:scale-95 transition-all mb-3 text-sm">
                       Go to Learning Environment
                     </Link>
+                  ) : course.price === 0 ? (
+                    <button
+                      onClick={handleEnrollFree}
+                      disabled={enrolling}
+                      className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold text-center shadow-lg shadow-emerald-600/20 hover:shadow-emerald-600/40 active:scale-95 transition-all mb-3 text-sm disabled:opacity-50"
+                    >
+                      {enrolling ? 'Enrolling...' : 'Enroll for Free'}
+                    </button>
                   ) : (
                     <button
                       onClick={handleAddToCart}
