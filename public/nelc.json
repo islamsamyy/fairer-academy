@@ -1,7 +1,7 @@
 {
-  "platform": "https://fairer-academy-m27q.vercel.app/",
+  "platform": "https://fairer-academy-m27q-4s35emaay-islamsamyys-projects.vercel.app/",
   "endpoint": "https://lrs.nelc.gov.sa/lrs-license-stg/xapi/statements",
   "authentication_type": "Basic",
-  "username": "faireracademym27q_vercel_app",
-  "password": "aHR0cHM6Ly9mYWlyZXItYWNhZGVteS1tMjdxLnZlcmNlbC5hcHAvbmVsY3Bhc3M="
+  "username": "faireracademym27q4s35emaayislamsamyysprojects_vercel_app",
+  "password": "aHR0cHM6Ly9mYWlyZXItYWNhZGVteS1tMjdxLTRzMzVlbWFheS1pc2xhbXNhbXl5cy1wcm9qZWN0cy52ZXJjZWwuYXBwL25lbGNwYXNz"
 }
