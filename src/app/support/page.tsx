@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -31,6 +32,7 @@ const faqs = [
 ];
 
 export default function SupportPage() {
+  const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
@@ -41,11 +43,11 @@ export default function SupportPage() {
         <motion.section initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative overflow-hidden py-20 px-6 text-center bg-gradient-to-br from-primary/5 via-surface to-secondary/5">
           <div className="max-w-2xl mx-auto relative z-10">
             <span className="material-symbols-outlined text-primary text-5xl mb-4 block">support_agent</span>
-            <h1 className="text-4xl sm:text-5xl font-headline font-bold tracking-tight text-on-background mb-4">How can we help?</h1>
-            <p className="text-on-surface-variant text-lg mb-8">Search our help center or browse categories below</p>
+            <h1 className="text-4xl sm:text-5xl font-headline font-bold tracking-tight text-on-background mb-4">{t('support.subtitle')}</h1>
+            <p className="text-on-surface-variant text-lg mb-8">{t('support.searchPlaceholder')}</p>
             <div className="flex items-center bg-white rounded-2xl shadow-lg border border-outline-variant/10 px-5 py-3 max-w-lg mx-auto">
               <span className="material-symbols-outlined text-outline mr-3">search</span>
-              <input className="bg-transparent border-none text-sm w-full outline-none placeholder:text-outline" placeholder="Search for help articles..." type="text" />
+              <input className="bg-transparent border-none text-sm w-full outline-none placeholder:text-outline" placeholder={t('support.searchPlaceholder')} type="text" />
             </div>
           </div>
         </motion.section>
@@ -55,21 +57,21 @@ export default function SupportPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/support/chat" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all outline-none">
               <span className="material-symbols-outlined text-[18px]">smart_toy</span>
-              AI Mentor Chat
+              {t('support.chat')}
             </Link>
             <Link href="/support/contact" className="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant/20 text-on-surface rounded-xl font-bold text-sm hover:bg-surface-container transition-colors outline-none">
               <span className="material-symbols-outlined text-[18px]">mail</span>
-              Contact Us
+              {t('support.contactUs')}
             </Link>
             <Link href="/support/community" className="flex items-center gap-2 px-6 py-3 bg-white border border-outline-variant/20 text-on-surface rounded-xl font-bold text-sm hover:bg-surface-container transition-colors outline-none">
               <span className="material-symbols-outlined text-[18px]">forum</span>
-              Community Forum
+              {t('support.community')}
             </Link>
           </div>
 
           {/* Categories */}
           <section>
-            <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">Browse by Topic</h2>
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">{t('support.browseTitle')}</h2>
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((cat) => (
                 <motion.div key={cat.title} variants={itemVariants} className="bg-white p-6 rounded-2xl border border-outline-variant/10 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
@@ -86,7 +88,7 @@ export default function SupportPage() {
 
           {/* FAQ */}
           <section>
-            <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">Frequently Asked Questions</h2>
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">{t('support.faqTitle')}</h2>
             <div className="space-y-3 max-w-3xl">
               {faqs.map((faq, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-outline-variant/10 overflow-hidden">

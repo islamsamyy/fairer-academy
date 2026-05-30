@@ -249,6 +249,7 @@ const en = {
     title: 'Help Center',
     subtitle: 'How can we help you?',
     searchPlaceholder: 'Search for help...',
+    browseTitle: 'Browse by Topic',
     faqTitle: 'Frequently Asked Questions',
     contactUs: 'Contact Us',
     community: 'Community',

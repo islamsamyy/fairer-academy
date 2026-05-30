@@ -231,6 +231,7 @@ const ar = {
     title: 'مركز المساعدة',
     subtitle: 'كيف يمكننا مساعدتك؟',
     searchPlaceholder: 'ابحث عن المساعدة...',
+    browseTitle: 'تصفح حسب الموضوع',
     faqTitle: 'الأسئلة الشائعة',
     contactUs: 'اتصل بنا',
     community: 'المجتمع',
