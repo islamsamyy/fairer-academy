@@ -9,23 +9,23 @@ import { User } from '@supabase/supabase-js';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/context/LanguageContext';
 
-const navLinks = [
-  { href: '/', label: 'Home', icon: 'home' },
-  { href: '/courses', label: 'Programs', icon: 'school' },
-  { href: '/bidjobs', label: 'BidJobs', icon: 'work' },
-  { href: '/scholarships', label: 'Scholarships', icon: 'auto_awesome' },
-  { href: '/support', label: 'Support', icon: 'support_agent' },
-  { href: '/about', label: 'About', icon: 'info' },
-];
-
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { cart } = useCart();
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+
+  const navLinks = [
+    { href: '/', label: t('nav.home'), icon: 'home' },
+    { href: '/courses', label: t('nav.programs'), icon: 'school' },
+    { href: '/bidjobs', label: t('nav.bidjobs'), icon: 'work' },
+    { href: '/scholarships', label: t('nav.scholarships'), icon: 'auto_awesome' },
+    { href: '/support', label: t('nav.support'), icon: 'support_agent' },
+    { href: '/about', label: t('nav.about'), icon: 'info' },
+  ];
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -159,7 +159,7 @@ export default function Header() {
                     isActive('/dashboard') ? 'text-primary bg-primary/5' : 'text-slate-500 hover:text-primary hover:bg-surface-container'
                   }`}
                 >
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Link>
                 <Link
                   href="/profile"
@@ -174,7 +174,7 @@ export default function Header() {
                 <button
                   onClick={handleSignOut}
                   className="hidden sm:flex p-2 text-slate-400 hover:text-error hover:bg-error/5 rounded-xl transition-all outline-none"
-                  title="Sign Out"
+                  title={t('nav.signOut')}
                 >
                   <span className="material-symbols-outlined text-xl">logout</span>
                 </button>
@@ -185,13 +185,13 @@ export default function Header() {
                   href="/login"
                   className="hidden sm:flex px-4 py-2 text-sm font-bold text-slate-600 hover:text-primary transition-colors outline-none"
                 >
-                  Sign In
+                  {t('nav.signIn')}
                 </Link>
                 <Link
                   href="/signup"
                   className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-105 transition-all outline-none"
                 >
-                  Join Now
+                  {t('nav.joinNow')}
                 </Link>
               </div>
             )}
@@ -231,7 +231,7 @@ export default function Header() {
                 className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-primary hover:bg-surface-container rounded-xl transition-all outline-none text-sm font-bold"
               >
                 <span className="material-symbols-outlined text-lg">language</span>
-                {language === 'en' ? 'العربية' : 'English'}
+                {language === 'en' ? 'العربية' : t('nav.langToggle')}
               </button>
             </div>
           </div>
