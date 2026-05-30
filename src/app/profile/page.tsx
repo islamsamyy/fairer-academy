@@ -1,6 +1,7 @@
-"use client";
+'use client';
 
-import { motion , Variants } from 'framer-motion';;
+import { motion , Variants } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },

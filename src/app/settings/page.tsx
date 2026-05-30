@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion , Variants } from 'framer-motion';;
+import { motion , Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
