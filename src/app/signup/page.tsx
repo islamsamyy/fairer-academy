@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -32,6 +33,7 @@ const itemVariants: Variants = {
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [role, setRole] = useState<'student' | 'instructor'>('student');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,14 +178,14 @@ export default function SignupPage() {
               {/* Full Name Input */}
               <motion.div variants={itemVariants} className="space-y-2">
                 <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="fullName">
-                  Full Name
+                  {t('signup.fullNameLabel')}
                 </label>
                 <div className="relative group">
                   <input
                     className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
                     id="fullName"
                     name="fullName"
-                    placeholder="Alex Rivera"
+                    placeholder={t('signup.fullNamePlaceholder')}
                     type="text"
                     required
                   />
@@ -199,7 +201,7 @@ export default function SignupPage() {
               {/* Email Input */}
               <motion.div variants={itemVariants} className="space-y-2">
                 <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="email">
-                  Email Address
+                  {t('signup.emailLabel')}
                 </label>
                 <div className="relative group">
                   <input
@@ -222,7 +224,7 @@ export default function SignupPage() {
               {/* Password Input + Strength */}
               <motion.div variants={itemVariants} className="space-y-3">
                 <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="password">
-                  Secure Password
+                  {t('signup.passwordLabel')}
                 </label>
                 <div className="relative group">
                   <input
@@ -288,7 +290,7 @@ export default function SignupPage() {
                 className="w-full h-14 mt-4 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg rounded-xl flex items-center justify-center gap-3 transition-all duration-300 group neon-glow outline-none hover:shadow-[0_8px_24px_rgba(0,104,123,0.3)] filter hover:brightness-110 disabled:opacity-70"
                 type="submit"
               >
-                {loading ? 'Initializing...' : 'Create Account'}
+                {loading ? t('signup.creating') : t('signup.createAccount')}
                 {!loading && (
                   <span
                     className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1"
@@ -303,12 +305,12 @@ export default function SignupPage() {
             {/* Footer Link */}
             <motion.footer variants={itemVariants} className="mt-8 text-center">
               <p className="text-on-surface-variant text-sm">
-                Already have an account?{' '}
+                {t('signup.alreadyHave')}{' '}
                 <Link
                   href="/login"
                   className="text-secondary font-bold font-mono uppercase tracking-tight hover:text-secondary-container transition-colors ml-1 outline-none"
                 >
-                  Sign In
+                  {t('signup.signIn')}
                 </Link>
               </p>
             </motion.footer>

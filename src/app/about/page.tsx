@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function AboutPage() {
+  const { t } = useLanguage();
   return (
     <div className="bg-surface min-h-[calc(100vh-64px)] py-20 px-4 sm:px-8">
       <div className="max-w-4xl mx-auto">
@@ -12,12 +14,12 @@ export default function AboutPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-bold tracking-widest uppercase mb-4">Our Vision</span>
+          <span className="inline-block px-4 py-1.5 bg-primary/5 text-primary rounded-full text-xs font-bold tracking-widest uppercase mb-4">{t('about.tag')}</span>
           <h1 className="text-4xl sm:text-5xl font-headline font-black tracking-tight text-on-surface mb-6">
-            Pioneering Luminous Logic at <span className="text-primary">Faireer Academy</span>
+            {t('about.h1')}
           </h1>
           <p className="text-on-surface-variant text-xl leading-relaxed max-w-2xl mx-auto">
-            We are more than just an educational platform. We are an ecosystem designed to bridge the gap between human potential and artificial intelligence.
+            {t('about.intro')}
           </p>
         </motion.div>
 
@@ -28,9 +30,9 @@ export default function AboutPage() {
             transition={{ delay: 0.2 }}
             className="bg-white p-8 rounded-3xl border border-outline-variant/10 shadow-lg shadow-primary/5"
           >
-            <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">Our Mission</h2>
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">{t('about.missionTitle')}</h2>
             <p className="text-on-surface-variant leading-relaxed">
-              To democratize access to high-level AI education and provide the tools for every individual to thrive in the new era of cognitive computing.
+              {t('about.missionBody')}
             </p>
           </motion.div>
           <motion.div
@@ -39,9 +41,9 @@ export default function AboutPage() {
             transition={{ delay: 0.3 }}
             className="bg-white p-8 rounded-3xl border border-outline-variant/10 shadow-lg shadow-primary/5"
           >
-            <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">The Academy</h2>
+            <h2 className="text-2xl font-headline font-bold text-on-surface mb-4">{t('about.academyTitle')}</h2>
             <p className="text-on-surface-variant leading-relaxed">
-              With over 50,000+ students globally, Faireer Academy is the leading institution for Neutral Architecture, Prompt Engineering, and AI Ethics.
+              {t('about.academyBody')}
             </p>
           </motion.div>
         </div>
@@ -52,10 +54,10 @@ export default function AboutPage() {
           transition={{ delay: 0.4 }}
           className="bg-gradient-to-br from-primary/5 to-secondary/5 p-12 rounded-[40px] border border-primary/10 text-center"
         >
-          <h2 className="text-3xl font-headline font-bold text-on-surface mb-6">Ready to join the future?</h2>
+          <h2 className="text-3xl font-headline font-bold text-on-surface mb-6">{t('about.ctaTitle')}</h2>
           <div className="flex flex-wrap justify-center gap-4">
-            <button className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all">Explore Programs</button>
-            <button className="px-8 py-4 bg-white border border-outline-variant text-on-surface rounded-2xl font-bold hover:bg-surface-container transition-all">Contact Us</button>
+            <button className="px-8 py-4 bg-primary text-white rounded-2xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all">{t('about.ctaExplore')}</button>
+            <button className="px-8 py-4 bg-white border border-outline-variant text-on-surface rounded-2xl font-bold hover:bg-surface-container transition-all">{t('about.ctaContact')}</button>
           </div>
         </motion.div>
       </div>

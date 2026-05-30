@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const navLinks = [
   { href: '/', label: 'Home', icon: 'home' },
@@ -21,6 +22,7 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { cart } = useCart();
+  const { language, setLanguage } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -114,6 +116,15 @@ export default function Header() {
             >
               <span className="material-symbols-outlined text-xl">search</span>
             </Link>
+
+            {/* Language Toggle */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+              className="px-3 py-2 text-sm font-bold text-slate-600 hover:text-primary hover:bg-surface-container rounded-xl transition-all outline-none"
+              title={language === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+            >
+              {language === 'en' ? 'AR' : 'EN'}
+            </button>
 
             {/* Cart */}
             <Link
@@ -215,6 +226,13 @@ export default function Header() {
                   {link.label}
                 </Link>
               ))}
+              <button
+                onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+                className="w-full flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-primary hover:bg-surface-container rounded-xl transition-all outline-none text-sm font-bold"
+              >
+                <span className="material-symbols-outlined text-lg">language</span>
+                {language === 'en' ? 'العربية' : 'English'}
+              </button>
             </div>
           </div>
         )}

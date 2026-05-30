@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -29,6 +30,7 @@ const itemVariants: Variants = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,10 +146,10 @@ export default function LoginPage() {
           </Link>
           <div className="space-y-1">
             <p className="text-4xl font-headline font-bold text-on-background tracking-tighter">
-              Welcome Back
+              {t('login.welcomeBack')}
             </p>
             <p className="text-on-surface-variant font-medium">
-              Please sign in to continue your journey.
+              {t('login.subtitle')}
             </p>
           </div>
         </motion.div>
@@ -177,14 +179,14 @@ export default function LoginPage() {
                 className="block font-label text-sm font-semibold text-on-surface-variant pl-1 uppercase tracking-wider"
                 htmlFor="email"
               >
-                Email Address
+                {t('login.emailLabel')}
               </label>
               <div className="relative">
                 <input
                   className="w-full bg-surface-container-low border-0 rounded-xl px-5 py-4 text-on-background placeholder:text-outline/50 focus:ring-2 focus:ring-primary-container/40 focus:bg-surface-container-lowest transition-all duration-300 outline-none hover:bg-surface-container/80"
                   id="email"
                   name="email"
-                  placeholder="alex.rivera@ethereal.edu"
+                  placeholder={t('login.emailPlaceholder')}
                   type="email"
                   required
                 />
@@ -198,13 +200,13 @@ export default function LoginPage() {
                   className="block font-label text-sm font-semibold text-on-surface-variant uppercase tracking-wider"
                   htmlFor="password"
                 >
-                  Password
+                  {t('login.passwordLabel')}
                 </label>
                 <a
                   className="text-xs font-mono font-bold text-secondary hover:text-secondary-container transition-colors uppercase tracking-widest"
                   href="#"
                 >
-                  Forgot Password?
+                  {t('login.forgotPassword')}
                 </a>
               </div>
               <div className="relative">
@@ -212,7 +214,7 @@ export default function LoginPage() {
                   className="w-full bg-surface-container-low border-0 rounded-xl px-5 py-4 text-on-background placeholder:text-outline/50 focus:ring-2 focus:ring-primary-container/40 focus:bg-surface-container-lowest transition-all duration-300 outline-none hover:bg-surface-container/80"
                   id="password"
                   name="password"
-                  placeholder="••••••••"
+                  placeholder={t('login.passwordPlaceholder')}
                   type="password"
                   required
                 />
@@ -228,7 +230,7 @@ export default function LoginPage() {
               className="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary-container text-white font-headline font-bold text-lg rounded-xl shadow-lg shadow-primary/20 neon-glow-primary transition-all duration-200 flex items-center justify-center gap-2 outline-none group disabled:opacity-70"
               type="submit"
             >
-              {loading ? 'Authenticating...' : 'Sign In'}
+              {loading ? t('login.signingIn') : t('login.signIn')}
               {!loading && (
                 <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">
                   arrow_forward
@@ -244,7 +246,7 @@ export default function LoginPage() {
             </div>
             <div className="relative flex justify-center text-xs">
               <span className="px-4 bg-transparent text-outline font-mono uppercase tracking-[0.2em] backdrop-blur-sm">
-                Or proceed with
+                {t('login.orWith')}
               </span>
             </div>
           </motion.div>
@@ -279,12 +281,12 @@ export default function LoginPage() {
           className="mt-10 text-center"
         >
           <p className="text-on-surface-variant font-medium">
-            New here?{' '}
+            {t('login.newHere')}{' '}
             <Link
               href="/signup"
               className="inline-flex items-center gap-1 text-primary font-bold hover:text-primary-container transition-all duration-200 group ml-1"
             >
-              Join the Academy
+              {t('login.joinAcademy')}
               <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
                 east
               </span>

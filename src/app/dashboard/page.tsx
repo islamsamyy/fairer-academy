@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
@@ -20,6 +21,7 @@ const staggerContainer = {
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLanguage();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [enrollments, setEnrollments] = useState<any[]>([]);
@@ -96,7 +98,7 @@ function DashboardContent() {
           </a>
           <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
             <span className="material-symbols-outlined">auto_stories</span>
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">My Courses</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">{t('dashboard.myCourses')}</span>
           </a>
           <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
             <span className="material-symbols-outlined">military_tech</span>
@@ -178,7 +180,7 @@ function DashboardContent() {
                 <span className="material-symbols-outlined text-tertiary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
                 <span className="text-tertiary text-xs font-mono">Latest: {certificates.length > 0 ? certificates[0].courses?.title : 'None'}</span>
               </div>
-              <p className="text-on-surface-variant text-sm font-medium">Certificates</p>
+              <p className="text-on-surface-variant text-sm font-medium">{t('dashboard.certificates')}</p>
               <h3 className="text-3xl font-headline font-bold">{certificates.length} Earned</h3>
             </motion.div>
             {/* Stat Card: Time */}
@@ -247,8 +249,8 @@ function DashboardContent() {
           {/* Continue Learning Section */}
           <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }} className="mb-12">
             <div className="flex justify-between items-end mb-6">
-              <h2 className="font-headline text-3xl font-bold">Continue Learning</h2>
-              <a className="text-primary font-medium text-sm flex items-center gap-1 hover:underline" href="#">View All Curriculum <span className="material-symbols-outlined text-sm">arrow_forward</span></a>
+              <h2 className="font-headline text-3xl font-bold">{t('dashboard.continueLearning')}</h2>
+              <a className="text-primary font-medium text-sm flex items-center gap-1 hover:underline" href="#">{t('dashboard.viewAll')} Curriculum <span className="material-symbols-outlined text-sm">arrow_forward</span></a>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {loading ? (
@@ -256,7 +258,7 @@ function DashboardContent() {
               ) : enrollments.length === 0 ? (
                 <div className="col-span-3 py-12 text-center bg-surface-container-low rounded-xl">
                   <p className="text-on-surface-variant mb-4">You are not enrolled in any courses yet.</p>
-                  <Link href="/courses" className="text-primary font-bold hover:underline">Explore Courses</Link>
+                  <Link href="/courses" className="text-primary font-bold hover:underline">{t('dashboard.exploreCourses')}</Link>
                 </div>
               ) : (
                 enrollments.map((enr) => (

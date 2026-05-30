@@ -2,6 +2,7 @@
 
 import { motion , Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const fadeUpVariant = {
   hidden: { opacity: 0, y: 30 },
@@ -14,6 +15,8 @@ const staggerContainer = {
 };
 
 export default function Home() {
+  const { t } = useLanguage();
+
   return (
     <>
 
@@ -28,23 +31,23 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Vision 2030 Aligned
+              {t('home.badge')}
             </div>
             <h1 className="text-6xl lg:text-8xl font-heading font-bold leading-[0.9] tracking-tighter text-on-background">
-              Fair Opportunities. <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary-container">Quality Education.</span> <br/>
-              Global Impact.
+              {t('home.h1Line1')} <br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-primary-container">{t('home.h1Line2')}</span> <br/>
+              {t('home.h1Line3')}
             </h1>
             <p className="text-xl text-muted-foreground max-w-lg leading-relaxed font-light">
-              Join 50,000+ learners from 150+ countries mastering in-demand skills through courses taught by industry experts. Affordable. Accessible. Life-changing.
+              {t('home.heroBody')}
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
               <button className="px-8 py-4 bg-primary text-white rounded-xl font-heading font-bold uppercase tracking-widest hover:bg-primary/90 premium-shadow transition-all group">
-                Explore Paths
+                {t('home.explorePaths')}
                 <span className="material-symbols-outlined align-middle ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
               </button>
               <button className="px-8 py-4 glass-card border border-white/50 text-on-background rounded-xl font-heading font-bold uppercase tracking-widest hover:bg-white transition-all">
-                The Vision
+                {t('home.theVision')}
               </button>
             </div>
           </motion.div>
@@ -61,8 +64,8 @@ export default function Home() {
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-mono uppercase text-primary tracking-widest font-bold">New Frontier</p>
-                  <p className="font-heading font-black text-on-background text-sm">Collective Intellect</p>
+                  <p className="text-[10px] font-mono uppercase text-primary tracking-widest font-bold">{t('home.floatingBadge')}</p>
+                  <p className="font-heading font-black text-on-background text-sm">{t('home.floatingTitle')}</p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -70,7 +73,7 @@ export default function Home() {
                   <motion.div initial={{ width: 0 }} animate={{ width: "88%" }} transition={{ delay: 1.2, duration: 2 }} className="h-full bg-gradient-to-r from-primary to-secondary"></motion.div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-[10px] text-muted-foreground font-mono font-bold uppercase">System Integration</p>
+                  <p className="text-[10px] text-muted-foreground font-mono font-bold uppercase">{t('home.floatingLabel')}</p>
                   <p className="text-[10px] text-primary font-mono font-black">88%</p>
                 </div>
               </div>
@@ -82,10 +85,10 @@ export default function Home() {
         <section className="px-8 py-12 max-w-screen-2xl mx-auto border-y border-outline-variant/10 bg-white/30 backdrop-blur-sm">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { label: 'Learners Joined', value: '52,408', icon: 'groups' },
-              { label: 'Expert Mentors', value: '1,200+', icon: 'psychology' },
-              { label: 'Global Scholarships', value: '15.2M', icon: 'auto_awesome' },
-              { label: 'BidJobs Placed', value: '8.4k', icon: 'work' },
+              { label: t('home.stat1Label'), value: t('home.stat1Value'), icon: 'groups' },
+              { label: t('home.stat2Label'), value: t('home.stat2Value'), icon: 'psychology' },
+              { label: t('home.stat3Label'), value: t('home.stat3Value'), icon: 'auto_awesome' },
+              { label: t('home.stat4Label'), value: t('home.stat4Value'), icon: 'work' },
             ].map((stat, i) => (
               <motion.div 
                 key={stat.label}
@@ -106,39 +109,39 @@ export default function Home() {
 
         <section className="px-8 py-24 max-w-screen-2xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="mb-16">
-            <motion.h2 variants={fadeUpVariant} className="text-4xl font-heading font-bold tracking-tight text-on-background">Why Choose Fareer Academy?</motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="text-4xl font-heading font-bold tracking-tight text-on-background">{t('home.whySectionTitle')}</motion.h2>
             <motion.div variants={fadeUpVariant} className="h-1 w-20 bg-primary mt-4"></motion.div>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-primary mb-6">payments</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">Affordable for Everyone</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Quality education shouldn't cost a fortune. Our courses are priced so everyone can afford them. Many courses start at just $19.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why1Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why1Body')}</p>
             </motion.div>
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-secondary mb-6">school</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">Learn From Industry Experts</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Every instructor is a professional in their field. No theory alone—practical, real-world knowledge from people doing the work every day.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why2Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why2Body')}</p>
             </motion.div>
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-cyan-500 mb-6">schedule</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">Learn On Your Schedule</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">No fixed class times. Watch lessons anytime, from anywhere. Learn at 2 AM or 2 PM—it's up to you.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why3Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why3Body')}</p>
             </motion.div>
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-accent mb-6">rocket_launch</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">From Learning to Earning</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Complete courses, build a portfolio, and connect directly with job opportunities on BidJobs. Your skills open doors worldwide.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why4Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why4Body')}</p>
             </motion.div>
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-yellow-600 mb-6">all_inclusive</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">Learn Forever</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">One payment. Lifetime access. Courses get updated, you get the new content free. Your learning journey never ends.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why5Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why5Body')}</p>
             </motion.div>
             <motion.div variants={fadeUpVariant} className="glass-card p-10 rounded-[2rem] premium-shadow border border-white/50 hover:bg-white/90 transition-all cursor-default">
               <span className="material-symbols-outlined text-4xl text-primary mb-6">verified_user</span>
-              <h3 className="text-2xl font-heading font-bold mb-4">Earn Recognized Certificates</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">Share your achievements on LinkedIn. Prove your skills to employers. Every certificate is verified and valuable.</p>
+              <h3 className="text-2xl font-heading font-bold mb-4">{t('home.why6Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed">{t('home.why6Body')}</p>
             </motion.div>
           </motion.div>
         </section>
@@ -149,24 +152,24 @@ export default function Home() {
           <div className="max-w-screen-2xl mx-auto px-8 relative z-10 flex flex-col lg:flex-row items-center gap-20">
             <motion.div initial={{ opacity: 0, x: -50 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full lg:w-1/2 space-y-8">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary font-mono text-[10px] font-bold tracking-widest uppercase">
-                The Faireer Advantage
+                {t('home.ecoTagline')}
               </div>
               <h2 className="text-5xl lg:text-7xl font-heading font-black leading-[0.9] tracking-tighter text-on-background">
-                Learn Today. <br/><span className="text-primary">Earn Forever.</span>
+                {t('home.ecoH2Line1')} <br/><span className="text-primary">{t('home.ecoH2Line2')}</span>
               </h2>
               <p className="text-lg text-muted-foreground font-light leading-relaxed max-w-xl">
-                We are more than an academy; we are a career engine. Graduates of Faireer Academy gain priority status on <span className="font-bold text-on-background underline decoration-primary decoration-4 underline-offset-4">BidJobs</span>, our sister platform for global freelancing and specialized hiring.
+                {t('home.ecoBody')}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
                 <div className="p-6 rounded-2xl bg-white border border-outline-variant/10 shadow-sm hover:shadow-md transition-shadow">
                   <span className="material-symbols-outlined text-primary mb-4 text-3xl">verified</span>
-                  <h4 className="font-heading font-bold mb-2">Verified Talent</h4>
-                  <p className="text-xs text-muted-foreground">Your course completions are automatically synced as verified badges on your BidJobs profile.</p>
+                  <h4 className="font-heading font-bold mb-2">{t('home.ecoCard1Title')}</h4>
+                  <p className="text-xs text-muted-foreground">{t('home.ecoCard1Body')}</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-white border border-outline-variant/10 shadow-sm hover:shadow-md transition-shadow">
                   <span className="material-symbols-outlined text-secondary mb-4 text-3xl">fast_forward</span>
-                  <h4 className="font-heading font-bold mb-2">Priority Pipeline</h4>
-                  <p className="text-xs text-muted-foreground">Top graduates are promoted directly to hand-picked enterprise clients on our global network.</p>
+                  <h4 className="font-heading font-bold mb-2">{t('home.ecoCard2Title')}</h4>
+                  <p className="text-xs text-muted-foreground">{t('home.ecoCard2Body')}</p>
                 </div>
               </div>
             </motion.div>
@@ -177,13 +180,13 @@ export default function Home() {
                     <div className="relative z-10 flex flex-col h-full">
                        <div className="flex justify-between items-center mb-16">
                           <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain filter brightness-110 drop-shadow-[0_0_10px_rgba(0,240,255,0.5)]" />
-                          <div className="px-5 py-1.5 rounded-full border border-white/20 text-white font-mono text-[10px] tracking-widest uppercase font-bold">Interconnected SDK</div>
+                          <div className="px-5 py-1.5 rounded-full border border-white/20 text-white font-mono text-[10px] tracking-widest uppercase font-bold">{t('home.sdkLabel')}</div>
                        </div>
                        <div className="space-y-6">
                           <div className="h-12 w-full bg-white/5 rounded-xl animate-pulse"></div>
                           <div className="h-12 w-4/5 bg-white/5 rounded-xl animate-pulse"></div>
                           <div className="h-32 w-full bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-center">
-                             <span className="text-primary font-heading font-black text-xl tracking-tighter">BIDJOBS SYNC ACTIVE</span>
+                             <span className="text-primary font-heading font-black text-xl tracking-tighter">{t('home.sdkStatus')}</span>
                           </div>
                        </div>
                     </div>
@@ -195,29 +198,29 @@ export default function Home() {
 
         <section className="py-24 px-8 max-w-screen-2xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="text-center mb-16">
-            <motion.h2 variants={fadeUpVariant} className="text-4xl font-heading font-bold text-on-background tracking-tighter">Get Started in 3 Steps</motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="text-4xl font-heading font-bold text-on-background tracking-tighter">{t('home.stepsTitle')}</motion.h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="group text-center space-y-4">
               <div className="w-20 h-20 bg-primary/5 text-primary rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:rotate-12 transition-transform duration-500 shadow-sm border border-primary/10">
                 <span className="material-symbols-outlined text-4xl">search</span>
               </div>
-              <h3 className="text-xl font-heading font-black">Explore & Choose</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed font-light">Browse hundreds of courses in multiple fields and languages. Find the perfect course for YOUR goals.</p>
+              <h3 className="text-xl font-heading font-black">{t('home.step1Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-light">{t('home.step1Body')}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="group text-center space-y-4">
               <div className="w-20 h-20 bg-secondary/5 text-secondary rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500 shadow-sm border border-secondary/10">
                 <span className="material-symbols-outlined text-4xl">play_circle</span>
               </div>
-              <h3 className="text-xl font-heading font-black">Learn At Your Pace</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed font-light">Access high-quality video lessons from industry experts. Our AI mentor is always ready to help.</p>
+              <h3 className="text-xl font-heading font-black">{t('home.step2Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-light">{t('home.step2Body')}</p>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className="group text-center space-y-4">
               <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:-rotate-12 transition-transform duration-500 shadow-sm border border-emerald-100">
                 <span className="material-symbols-outlined text-4xl">emoji_events</span>
               </div>
-              <h3 className="text-xl font-heading font-black">Land Opportunities</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed font-light">Complete courses, earn certificates, and connect directly with employers through BidJobs.</p>
+              <h3 className="text-xl font-heading font-black">{t('home.step3Title')}</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed font-light">{t('home.step3Body')}</p>
             </motion.div>
           </div>
         </section>
@@ -227,18 +230,18 @@ export default function Home() {
              <div className="relative rounded-[2rem] overflow-hidden bg-slate-900 shadow-3xl aspect-video flex items-center justify-center p-12 group">
                 <div className="absolute inset-0 bg-primary/10 opacity-50 blur-2xl"></div>
                 <div className="text-center space-y-4 relative z-10 transition-transform duration-700 group-hover:scale-110">
-                  <div className="text-5xl lg:text-7xl font-heading font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]">Born in KSA</div>
-                  <div className="text-xl font-heading text-primary font-bold tracking-[0.2em] uppercase">Serving the World</div>
+                  <div className="text-5xl lg:text-7xl font-heading font-black text-white tracking-tighter drop-shadow-[0_0_20px_rgba(0,240,255,0.4)]">{t('home.ksaH2')}</div>
+                  <div className="text-xl font-heading text-primary font-bold tracking-[0.2em] uppercase">{t('home.ksaSubheading')}</div>
                 </div>
              </div>
           </motion.div>
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer} className="space-y-8">
-            <motion.h2 variants={fadeUpVariant} className="text-4xl lg:text-5xl font-heading font-black text-on-background tracking-tighter leading-tight">Rooted in Excellence, <br/>Expanding Globally.</motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="text-4xl lg:text-5xl font-heading font-black text-on-background tracking-tighter leading-tight">{t('home.ksaTitle')}</motion.h2>
             <motion.div variants={fadeUpVariant} className="space-y-6 text-muted-foreground text-lg">
-              <p className="leading-relaxed font-light">From Saudi Arabia to 150+ countries. We are making world-class education affordable and accessible for millions of learners, bridging the gap between learning and earning.</p>
+              <p className="leading-relaxed font-light">{t('home.ksaBody')}</p>
               <div className="p-8 bg-white/50 backdrop-blur-md rounded-2xl border border-primary/10 flex gap-6 items-center shadow-lg hover:shadow-primary/5 transition-shadow">
                 <span className="text-5xl font-heading font-black text-primary opacity-20">ع</span>
-                <p className="text-sm font-medium leading-relaxed italic">"Fareer Academy is the bridge between local ambition and global opportunity."</p>
+                <p className="text-sm font-medium leading-relaxed italic">{t('home.ksaQuote')}</p>
               </div>
             </motion.div>
           </motion.div>
@@ -249,16 +252,16 @@ export default function Home() {
             <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} className="mx-auto w-24 h-24 bg-primary/5 rounded-[30%] flex items-center justify-center mb-4 active:rotate-180 transition-transform duration-700">
                <img src="/logo.png" alt="Logo" className="w-14 h-14 object-contain" />
             </motion.div>
-            <motion.h2 variants={fadeUpVariant} className="text-6xl md:text-8xl font-heading font-black tracking-tighter text-on-background leading-none">Ready to Ascend?</motion.h2>
+            <motion.h2 variants={fadeUpVariant} className="text-6xl md:text-8xl font-heading font-black tracking-tighter text-on-background leading-none">{t('home.ctaTitle')}</motion.h2>
             <motion.p variants={fadeUpVariant} className="text-xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
-              Join 50,000+ high-performers. Your trajectory from learner to industry leader starts with a single, deliberate step.
+              {t('home.ctaBody')}
             </motion.p>
             <motion.div variants={fadeUpVariant} className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
               <Link href="/courses" className="px-12 py-5 bg-primary text-white rounded-2xl font-heading font-black text-lg tracking-widest uppercase hover:bg-primary shadow-xl shadow-primary/30 hover:scale-105 transition-all flex items-center justify-center">
-                Join the Academy
+                {t('home.ctaJoin')}
               </Link>
               <Link href="/support/contact" className="px-12 py-5 glass-card border-2 border-primary/20 text-on-background rounded-2xl font-heading font-black text-lg tracking-widest uppercase hover:bg-white hover:border-primary transition-all flex items-center justify-center">
-                Talk to an Advisor
+                {t('home.ctaAdvisor')}
               </Link>
             </motion.div>
           </motion.div>
@@ -285,19 +288,19 @@ export default function Home() {
               ></iframe>
             </div>
             <p className="font-sans text-xs tracking-widest text-white/40 max-w-xs uppercase leading-relaxed font-bold">
-              © 2024 Fairer Academy. <br/>Powered by BidJobs Ecosystem. <br/>Rooted in Saudi Excellence.
+              {t('home.footerCopy')}
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-x-12 gap-y-6">
             <div className="flex flex-col gap-4">
-              <p className="text-[10px] font-mono tracking-widest text-primary uppercase font-black">Exploration</p>
-              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/about">About Us</Link>
-              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/support">Help Center</Link>
+              <p className="text-[10px] font-mono tracking-widest text-primary uppercase font-black">{t('home.footerExploration')}</p>
+              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/about">{t('home.footerAbout')}</Link>
+              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/support">{t('home.footerHelp')}</Link>
             </div>
             <div className="flex flex-col gap-4">
-              <p className="text-[10px] font-mono tracking-widest text-secondary uppercase font-black">Ecosystem</p>
-              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/bidjobs">BidJobs</Link>
-              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/scholarships">Scholarships</Link>
+              <p className="text-[10px] font-mono tracking-widest text-secondary uppercase font-black">{t('home.footerEcosystem')}</p>
+              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/bidjobs">{t('home.footerBidJobs')}</Link>
+              <Link className="text-xs font-bold text-white/60 hover:text-white transition-colors" href="/scholarships">{t('home.footerScholarships')}</Link>
             </div>
           </div>
           <div className="flex gap-4">
@@ -310,7 +313,7 @@ export default function Home() {
           </div>
         </div>
         <div className="px-12 py-6 border-t border-white/5 text-center">
-           <p className="text-[9px] font-mono text-white/20 tracking-[0.4em] uppercase">Global Impact Vision 2030</p>
+           <p className="text-[9px] font-mono text-white/20 tracking-[0.4em] uppercase">{t('home.footerGlobal')}</p>
         </div>
       </footer>
     </>

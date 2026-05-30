@@ -148,3 +148,16 @@
   box-shadow: 0 12px 24px rgba(23, 28, 33, 0.06);
 }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* RTL Support */
+html[dir="rtl"] {
+  font-family: var(--font-arabic), var(--font-sans);
+}
+
+[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .group-hover\:translate-x-1:hover {
+  transform: translateX(-0.25rem);
+}

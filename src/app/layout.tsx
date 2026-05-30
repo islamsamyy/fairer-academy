@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, Space_Grotesk, JetBrains_Mono, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
-import HeaderWrapper from "@/components/HeaderWrapper";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -18,12 +18,16 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
+const notoSansArabic = Noto_Sans_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+});
+
 export const metadata: Metadata = {
   title: "Faireer",
   description: "Faireer Academy: Luminous Logic",
 };
 
-import { CartProvider } from "@/context/CartContext";
 
 export default function RootLayout({
   children,
@@ -33,17 +37,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased text-[15px] lg:text-[16px]`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} ${notoSansArabic.variable} h-full antialiased text-[15px] lg:text-[16px]`}
       suppressHydrationWarning
     >
       <head>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
-        <CartProvider>
-          <HeaderWrapper />
+        <ClientLayout>
           {children}
-        </CartProvider>
+        </ClientLayout>
       </body>
     </html>
   );
