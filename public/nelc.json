@@ -1,0 +1,7 @@
+{
+  "platform": "https://fairer-academy-m27q.vercel.app/",
+  "endpoint": "https://lrs.nelc.gov.sa/lrs-license-stg/xapi/statements",
+  "authentication_type": "Basic",
+  "username": "faireracademym27q_vercel_app",
+  "password": "aHR0cHM6Ly9mYWlyZXItYWNhZGVteS1tMjdxLnZlcmNlbC5hcHAvbmVsY3Bhc3M="
+}
