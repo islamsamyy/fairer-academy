@@ -273,8 +273,8 @@ const en = {
 
   // ── Scholarships ──────────────────────────────────────────────────────────
   scholarships: {
-    title: 'Scholarships',
-    subtitle: 'Opening doors for everyone.',
+    title: 'Scholarships & Grants',
+    subtitle: "Empowering the next generation of AI pioneers. Our scholarship programs for 2026-2027 are undergoing review. Join our community to be the first to apply.",
     applyNow: 'Apply Now',
     learnMore: 'Learn More',
     eligibility: 'Eligibility',
@@ -283,8 +283,8 @@ const en = {
 
   // ── BidJobs ───────────────────────────────────────────────────────────────
   bidjobs: {
-    title: 'BidJobs',
-    subtitle: 'Connect your skills to global opportunities.',
+    title: 'BidJobs Marketplace',
+    subtitle: "The ultimate platform for AI talent and project collaboration. We're currently fine-tuning our matchmaking algorithms to bring you the best opportunities.",
     browseJobs: 'Browse Jobs',
     postJob: 'Post a Job',
     myBids: 'My Bids',
