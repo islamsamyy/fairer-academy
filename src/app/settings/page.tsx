@@ -26,6 +26,7 @@ const itemVariants: Variants = {
 };
 
 export default function SettingsPage() {
+  const { t } = useLanguage();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
   const [emailAlertsEnabled, setEmailAlertsEnabled] = useState(true);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(false);
