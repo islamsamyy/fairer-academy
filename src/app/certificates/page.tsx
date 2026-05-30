@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -20,13 +21,14 @@ const certs = [
 ];
 
 export default function CertificatesPage() {
+  const { t } = useLanguage();
   return (
     <div className="bg-surface font-body text-on-background min-h-screen">
 
       <main className="pt-8 pb-24 max-w-5xl mx-auto px-4 sm:px-8">
         <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
-          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">My Certificates</h1>
-          <p className="text-on-surface-variant mt-2">Your verified credentials and achievements</p>
+          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">{t('certificates.title')}</h1>
+          <p className="text-on-surface-variant mt-2">{t('certificates.subtitle')}</p>
         </motion.header>
 
         <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -48,10 +50,10 @@ export default function CertificatesPage() {
                 </div>
                 <div className="flex gap-2">
                   <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl text-sm font-bold active:scale-95 transition-all outline-none">
-                    <span className="material-symbols-outlined text-[16px]">download</span>PDF
+                    <span className="material-symbols-outlined text-[16px]">download</span>{t('certificates.download')}
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-2 py-2.5 border border-outline-variant/20 text-on-surface-variant rounded-xl text-sm font-bold hover:bg-surface-container transition-colors outline-none">
-                    <span className="material-symbols-outlined text-[16px]">share</span>Share
+                    <span className="material-symbols-outlined text-[16px]">share</span>{t('certificates.share')}
                   </button>
                 </div>
               </div>

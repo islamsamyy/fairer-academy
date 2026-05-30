@@ -5,6 +5,7 @@ import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useSearchParams } from 'next/navigation';
+import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -17,6 +18,7 @@ const itemVariants: Variants = {
 };
 
 function SearchResultsContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
   const [results, setResults] = useState<any[]>([]);
@@ -91,8 +93,8 @@ function SearchResultsContent() {
         ) : results.length === 0 ? (
           <div className="py-20 text-center">
             <span className="material-symbols-outlined text-outline text-6xl mb-4">search_off</span>
-            <p className="text-on-surface-variant font-medium">No results found for your search.</p>
-            <Link href="/courses" className="text-primary font-bold mt-4 inline-block hover:underline">Explore all courses</Link>
+            <p className="text-on-surface-variant font-medium">{t('search.noResults')} "{query}"</p>
+            <Link href="/courses" className="text-primary font-bold mt-4 inline-block hover:underline">{t('courses.h1Sub')}</Link>
           </div>
         ) : (
           results.map((r, i) => (
