@@ -73,7 +73,7 @@ export default function SettingsPage() {
               transition={{ duration: 0.5, ease: 'easeOut' }}
               className="text-3xl font-headline font-bold tracking-tight text-on-background"
             >
-              Account Settings
+              {t('settings.title')}
             </motion.h2>
             <motion.div
               initial={{ opacity: 0, x: 20 }}

@@ -14,6 +14,7 @@ const staggerContainer = {
 };
 
 export default function Profile() {
+  const { t } = useLanguage();
   return (
     <div className="bg-surface font-body text-on-background min-h-screen selection:bg-primary-container selection:text-on-primary-container">
       {/* TopNavBar */}
@@ -65,7 +66,7 @@ export default function Profile() {
           <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative overflow-hidden rounded-2xl bg-surface-container-low p-8 flex flex-col md:flex-row justify-between items-end md:items-center">
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
             <div className="z-10 space-y-2">
-              <h1 className="text-4xl font-headline font-bold tracking-tighter text-on-surface">Student Profile</h1>
+              <h1 className="text-4xl font-headline font-bold tracking-tighter text-on-surface">{t('profile.title') || 'Student Profile'}</h1>
               <p className="text-outline max-w-md">Welcome back, Alex. Your journey through the Quantum Computing track is currently at 74% completion.</p>
             </div>
             <div className="flex gap-8 z-10 mt-6 md:mt-0 w-full md:w-auto justify-between md:justify-start">
@@ -152,8 +153,8 @@ export default function Profile() {
           {/* Mastery Achievements (Bento Style) */}
           <section className="space-y-8 pt-6">
             <div className="flex justify-between items-end border-t border-outline-variant/10 pt-8">
-              <h2 className="text-2xl font-headline font-bold tracking-tight text-on-surface">Recent Achievements</h2>
-              <a className="text-sm font-mono text-primary font-bold hover:underline" href="#">VIEW ALL BADGES</a>
+              <h2 className="text-2xl font-headline font-bold tracking-tight text-on-surface">{t('profile.recentAchievements') || 'Recent Achievements'}</h2>
+              <a className="text-sm font-mono text-primary font-bold hover:underline" href="#">{t('profile.viewAllBadges') || 'VIEW ALL BADGES'}</a>
             </div>
             <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {/* Achievement Badge 1 */}

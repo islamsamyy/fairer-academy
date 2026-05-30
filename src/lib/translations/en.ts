@@ -201,6 +201,9 @@ const en = {
     bio: 'Bio',
     noBio: 'No bio yet.',
     joinedCourses: 'Joined Courses',
+    title: 'Student Profile',
+    recentAchievements: 'Recent Achievements',
+    viewAllBadges: 'View All Badges',
   },
 
   // ── Settings ──────────────────────────────────────────────────────────────

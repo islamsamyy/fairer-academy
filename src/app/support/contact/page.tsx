@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
@@ -10,13 +11,14 @@ const itemVariants: Variants = {
 };
 
 export default function ContactPage() {
+  const { t } = useLanguage();
   return (
     <div className="bg-surface font-body text-on-background min-h-screen">
 
       <main className="pt-8 pb-24 max-w-5xl mx-auto px-4 sm:px-8">
         <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10 text-center">
-          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">Contact Us</h1>
-          <p className="text-on-surface-variant mt-2 max-w-lg mx-auto">Have a question? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+          <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background">{t('contact.title')}</h1>
+          <p className="text-on-surface-variant mt-2 max-w-lg mx-auto">{t('contact.subtitle')}</p>
         </motion.header>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
@@ -24,11 +26,11 @@ export default function ContactPage() {
             <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-outline-variant/10">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Name</label>
-                  <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="Your name" type="text" />
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{t('contact.nameLabel')}</label>
+                  <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder={t('contact.nameLabel')} type="text" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Email</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{t('contact.emailLabel')}</label>
                   <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="you@email.com" type="email" />
                 </div>
               </div>
@@ -42,11 +44,11 @@ export default function ContactPage() {
                 </select>
               </div>
               <div className="mb-6">
-                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Message</label>
-                <textarea className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none" rows={6} placeholder="How can we help you?" />
+                <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{t('contact.messageLabel')}</label>
+                <textarea className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20 resize-none" rows={6} placeholder={t('contact.messageLabel')} />
               </div>
               <button className="w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all outline-none flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined">send</span> Send Message
+                <span className="material-symbols-outlined">send</span> {t('contact.send')}
               </button>
             </div>
           </motion.div>
