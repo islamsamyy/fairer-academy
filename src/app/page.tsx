@@ -269,10 +269,21 @@ export default function Home() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[100px] rounded-full -mr-48 -mt-48"></div>
         <div className="flex flex-col md:flex-row justify-between items-center px-12 py-16 gap-10 relative z-10">
           <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-4 group">
-              <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain filter brightness-110 drop-shadow-[0_0_10px_rgba(0,240,255,0.4)] group-hover:scale-110 transition-transform" />
-              <span className="text-3xl font-heading font-black tracking-tighter">Fairer<span className="text-primary">.</span></span>
-            </Link>
+            <div className="flex flex-col xl:flex-row items-start xl:items-center gap-6">
+              <Link href="/" className="flex items-center gap-4 group">
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain filter brightness-110 drop-shadow-[0_0_10px_rgba(0,240,255,0.4)] group-hover:scale-110 transition-transform" />
+                <span className="text-3xl font-heading font-black tracking-tighter">Fairer<span className="text-primary">.</span></span>
+              </Link>
+              {/* NELC Entity Verification Badge */}
+              <iframe
+                src="https://services.futurex.sa/entity-badge?code=AcTfbCBySVsZYteq"
+                width="250"
+                height="60"
+                referrerPolicy="unsafe-url"
+                style={{ border: "none" }}
+                title="NELC Verified Entity"
+              ></iframe>
+            </div>
             <p className="font-sans text-xs tracking-widest text-white/40 max-w-xs uppercase leading-relaxed font-bold">
               © 2024 Fairer Academy. <br/>Powered by BidJobs Ecosystem. <br/>Rooted in Saudi Excellence.
             </p>
