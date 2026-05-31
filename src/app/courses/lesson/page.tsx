@@ -41,6 +41,8 @@ function VideoLessonContent() {
   const [user, setUser] = useState<User | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [enrollment, setEnrollment] = useState<any>(null);
+  const [instructor, setInstructor] = useState<any>(null);
+  const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchData() {
@@ -83,9 +85,18 @@ function VideoLessonContent() {
         setEnrollment(enrollmentData);
       }
 
+      // Fetch instructor
+      if (courseData?.instructor_id) {
+        const { data: instData } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url, bio, role')
+          .eq('id', courseData.instructor_id)
+          .single();
+        setInstructor(instData);
+      }
+
       if (lessonsData) {
         setLessons(lessonsData);
-        // Set current lesson
         let selectedLesson = lessonsData[0];
         if (initialLessonId) {
           const found = lessonsData.find(l => l.id === initialLessonId);
@@ -93,15 +104,18 @@ function VideoLessonContent() {
         }
         setCurrentLesson(selectedLesson);
 
-        // Check if current lesson is completed
-        if (selectedLesson && enrollmentData) {
+        // Load all completed lessons for this enrollment
+        if (enrollmentData) {
           const { data: progressData } = await supabase
             .from('lesson_progress')
-            .select('*')
+            .select('lesson_id')
             .eq('enrollment_id', enrollmentData.id)
-            .eq('lesson_id', selectedLesson.id)
-            .single();
-          setIsCompleted(!!progressData?.completed_at);
+            .not('completed_at', 'is', null);
+          if (progressData) {
+            const ids = new Set(progressData.map((p: any) => p.lesson_id));
+            setCompletedLessonIds(ids);
+            if (selectedLesson) setIsCompleted(ids.has(selectedLesson.id));
+          }
         }
       }
       setLoading(false);
@@ -206,6 +220,7 @@ function VideoLessonContent() {
                           completed_at: new Date().toISOString(),
                         });
                         setIsCompleted(true);
+                        setCompletedLessonIds(prev => new Set([...prev, currentLesson.id]));
 
                         // Update enrollment progress percentage
                         const { count: totalLessons } = await supabase
@@ -226,6 +241,7 @@ function VideoLessonContent() {
                           last_accessed_at: new Date().toISOString(),
                           completed_at: progress === 100 ? new Date().toISOString() : null,
                         }).eq('id', enrollment.id);
+                        setEnrollment((e: any) => ({ ...e, progress_percentage: progress }));
 
                         // Auto-generate certificate if course is 100% complete
                         if (progress === 100) {
@@ -275,31 +291,32 @@ function VideoLessonContent() {
               </div>
 
               {/* Instructor Card */}
-              <div className="lg:w-80 flex-shrink-0">
-                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-surface-container-highest/50 hover:shadow-md transition-shadow">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-outline mb-6 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">person</span>
-                    Instructor
-                  </h3>
-                  <div className="flex items-center gap-4 mb-6">
-                    <img
-                      alt="Dr. Julian Vane"
-                      className="w-16 h-16 rounded-full object-cover border border-surface-container-highest ring-2 ring-transparent hover:ring-secondary/30 transition-all cursor-pointer"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDJg-K5jIgJ7mG_N3jT1kwDBPjfyu7dNuGE_HIA6ZbdhDrh_bgf5lDI_bYEfYwgXQPtXkxXLFFHOEXMdqVXFg09o0CWWcDXJvts1EOR0HeZWILvTJiqL_qsqqcCzJbnimn3gj6_TqPPATN7-e4IctzX9CskXF-YA2PiYi-N2MLToQF-B9g_tBEd_dmEMOKCIeqVe4fiNmNV1XtwAHrFh4XPjR5r9N1sijsfGBpXodKYSWPKpYMzsWIomRvoQ5gjGTafeB0Ksyk40Is"
-                    />
-                    <div>
-                      <h4 className="font-headline font-bold text-slate-900 text-lg hover:text-secondary transition-colors cursor-pointer">Dr. Julian Vane</h4>
-                      <p className="text-xs text-secondary font-medium mt-0.5">Design Scientist</p>
+              {instructor && (
+                <div className="lg:w-80 flex-shrink-0">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-surface-container-highest/50">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-outline mb-4 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">person</span>
+                      Instructor
+                    </h3>
+                    <div className="flex items-center gap-3 mb-3">
+                      {instructor.avatar_url ? (
+                        <img alt={instructor.full_name} className="w-14 h-14 rounded-full object-cover border border-surface-container-highest" src={instructor.avatar_url} />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                          {(instructor.full_name || '?').charAt(0)}
+                        </div>
+                      )}
+                      <div>
+                        <h4 className="font-bold text-on-surface">{instructor.full_name}</h4>
+                        <p className="text-xs text-secondary font-medium capitalize">{instructor.role}</p>
+                      </div>
                     </div>
+                    {instructor.bio && (
+                      <p className="text-sm text-on-surface-variant leading-relaxed">{instructor.bio}</p>
+                    )}
                   </div>
-                  <p className="text-sm text-on-surface-variant font-medium mb-6 leading-relaxed">
-                    Specializing in the intersection of neural networks and aesthetic theory for over 12 years.
-                  </p>
-                  <button className="w-full py-3 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl font-bold hover:bg-secondary hover:text-white hover:border-transparent active:scale-95 transition-all text-sm outline-none">
-                    Follow Instructor
-                  </button>
                 </div>
-              </div>
+              )}
             </motion.div>
           </motion.div>
         </section>
@@ -312,9 +329,14 @@ function VideoLessonContent() {
               <span className="text-xs font-mono font-bold text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary/20">Lesson {lessons.findIndex(l => l.id === currentLesson?.id) + 1} / {lessons.length}</span>
             </div>
             <div className="w-full h-2 bg-surface-container-highest/50 rounded-full overflow-hidden shadow-inner flex">
-              <div className="h-full w-[0%] bg-gradient-to-r from-primary to-primary-container rounded-full shadow-[0_0_8px_rgba(0,217,255,0.4)]"></div>
+              <div
+                className="h-full bg-gradient-to-r from-primary to-primary-container rounded-full shadow-[0_0_8px_rgba(0,217,255,0.4)] transition-all duration-500"
+                style={{ width: `${enrollment?.progress_percentage ?? 0}%` }}
+              />
             </div>
-            <p className="text-xs text-outline font-bold mt-3 text-right">0% Complete</p>
+            <p className="text-xs text-outline font-bold mt-3 text-right">
+              {Math.round(enrollment?.progress_percentage ?? 0)}% Complete
+            </p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 hide-scrollbar">
@@ -325,60 +347,61 @@ function VideoLessonContent() {
               </div>
               
               <div className="space-y-2">
-                {lessons.map((lesson, idx) => (
-                  <div 
-                    key={lesson.id} 
-                    onClick={() => setCurrentLesson(lesson)}
-                    className={`flex items-start gap-4 p-4 rounded-xl shadow-sm border border-surface-container-highest/50 cursor-pointer hover:shadow-md transition-all group ${currentLesson?.id === lesson.id ? 'border-l-4 border-l-primary bg-white' : 'border-transparent hover:bg-surface-container-highest/30'}`}
-                  >
-                    <span className={`material-symbols-outlined text-2xl group-hover:scale-110 transition-transform ${currentLesson?.id === lesson.id ? 'text-primary' : 'text-outline'}`}>
-                      {currentLesson?.id === lesson.id ? 'play_circle' : 'play_arrow'}
-                    </span>
-                    <div className="flex-1 pt-0.5">
-                      <h5 className={`text-sm font-bold leading-tight ${currentLesson?.id === lesson.id ? 'text-slate-900' : 'text-on-surface-variant group-hover:text-on-surface'}`}>
-                        {lesson.title}
-                      </h5>
-                      <span className="text-[10px] sm:text-xs text-outline font-mono mt-1.5 block font-medium">10:00</span>
+                {lessons.map((lesson) => {
+                  const done = completedLessonIds.has(lesson.id);
+                  const active = currentLesson?.id === lesson.id;
+                  const mins = Math.floor((lesson.duration_seconds || 0) / 60);
+                  const secs = (lesson.duration_seconds || 0) % 60;
+                  return (
+                    <div
+                      key={lesson.id}
+                      onClick={() => {
+                        setCurrentLesson(lesson);
+                        setIsCompleted(completedLessonIds.has(lesson.id));
+                      }}
+                      className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all group ${active ? 'bg-primary/10 border border-primary/20' : 'hover:bg-surface-container-highest/30 border border-transparent'}`}
+                    >
+                      <span className={`material-symbols-outlined text-xl flex-shrink-0 ${done ? 'text-emerald-500' : active ? 'text-primary' : 'text-outline'}`}
+                        style={done ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                        {done ? 'check_circle' : active ? 'play_circle' : 'radio_button_unchecked'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium leading-tight truncate ${active ? 'text-primary font-bold' : 'text-on-surface-variant group-hover:text-on-surface'}`}>
+                          {lesson.title}
+                        </p>
+                        {lesson.duration_seconds > 0 && (
+                          <span className="text-[10px] text-outline font-mono mt-0.5 block">
+                            {mins}:{secs.toString().padStart(2, '0')}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Module 2 */}
-            <div className="mb-4 pt-4 border-t border-surface-container-highest/30">
-              <div className="flex items-center justify-between px-2 py-2 mb-2 cursor-pointer group">
-                <span className="text-xs font-bold uppercase tracking-widest text-outline group-hover:text-on-surface transition-colors">Module 2: Application</span>
-                <span className="material-symbols-outlined text-outline group-hover:text-on-surface transition-colors">expand_more</span>
-              </div>
-              <div className="space-y-1 opacity-50">
-                <div className="flex items-start gap-4 p-4 border border-transparent rounded-xl">
-                  <span className="material-symbols-outlined text-outline text-xl pt-0.5">lock</span>
-                  <div className="flex-1 pt-0.5">
-                    <h5 className="text-sm font-medium text-outline leading-tight">Surface Hierarchy</h5>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 border border-transparent rounded-xl">
-                  <span className="material-symbols-outlined text-outline text-xl pt-0.5">lock</span>
-                  <div className="flex-1 pt-0.5">
-                    <h5 className="text-sm font-medium text-outline leading-tight">Building the Sanctuary</h5>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Achievements / Rewards Area */}
-            <div className="mt-8 mb-4 sm:mb-8 p-6 rounded-2xl bg-gradient-to-br from-tertiary-container/30 to-secondary-container/10 border border-tertiary-container/40 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow cursor-default">
-              <div className="absolute -right-4 -top-4 w-20 h-20 bg-tertiary-container/20 rounded-full blur-xl group-hover:bg-tertiary-container/30 transition-colors"></div>
-              <div className="flex items-center gap-3 mb-4 relative z-10">
-                <span className="material-symbols-outlined text-tertiary group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">stars</span>
-                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-tertiary-fixed-dim">Upcoming Reward</h4>
+            {/* Certificate progress teaser */}
+            {enrollment && (
+              <div className="mt-6 p-5 rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/5 border border-primary/20 relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="material-symbols-outlined text-primary">workspace_premium</span>
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-primary">Course Certificate</h4>
+                </div>
+                <div className="w-full h-2 bg-white/60 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-primary rounded-full transition-all duration-500"
+                    style={{ width: `${enrollment.progress_percentage ?? 0}%` }}
+                  />
+                </div>
+                <p className="text-xs text-on-surface-variant">
+                  {enrollment.progress_percentage >= 100
+                    ? '🎉 Certificate earned! Check your certificates page.'
+                    : `${Math.round(enrollment.progress_percentage ?? 0)}% — complete all lessons to earn your certificate`}
+                </p>
               </div>
-              <p className="text-sm font-bold text-on-surface mb-3 relative z-10">"Founding Architect" Badge</p>
-              <div className="w-full h-1.5 bg-white/60 rounded-full overflow-hidden shadow-inner relative z-10">
-                <div className="h-full w-[20%] bg-tertiary rounded-full shadow-[0_0_8px_rgba(255,186,73,0.5)]"></div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Resume Lesson CTA (Sticky Bottom) */}

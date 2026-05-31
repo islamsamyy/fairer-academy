@@ -43,6 +43,14 @@ export default function CourseDetailPage() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [qaSearch, setQaSearch] = useState('');
+  const [newQuestion, setNewQuestion] = useState({ title: '', body: '' });
+  const [showQuestionForm, setShowQuestionForm] = useState(false);
+  const [submittingQuestion, setSubmittingQuestion] = useState(false);
+  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Record<string, any[]>>({});
+  const [newAnswer, setNewAnswer] = useState<Record<string, string>>({});
 
   useEffect(() => {
     async function fetchData() {
@@ -97,6 +105,14 @@ export default function CourseDetailPage() {
           .select('*', { count: 'exact', head: true })
           .eq('course_id', id);
         if (count !== null) setEnrollmentCount(count);
+
+        // Fetch Questions
+        const { data: qData } = await supabase
+          .from('questions')
+          .select(`*, profiles:user_id (full_name, avatar_url)`)
+          .eq('course_id', id)
+          .order('created_at', { ascending: false });
+        if (qData) setQuestions(qData);
 
         // Check Enrollment
         if (user) {
@@ -459,27 +475,182 @@ export default function CourseDetailPage() {
 
               {/* Tab Content: Q&A */}
               {activeTab === 'qa' && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  <div className="flex items-center gap-4 bg-surface-container-low p-4 rounded-xl border border-outline-variant/10">
-                    <span className="material-symbols-outlined text-outline">search</span>
-                    <input className="bg-transparent border-none text-sm w-full outline-none placeholder:text-outline" placeholder="Search questions..." type="text" />
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+                  {/* Search + Ask button */}
+                  <div className="flex gap-3">
+                    <div className="flex-1 flex items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/10">
+                      <span className="material-symbols-outlined text-outline text-sm">search</span>
+                      <input
+                        value={qaSearch}
+                        onChange={e => setQaSearch(e.target.value)}
+                        className="bg-transparent text-sm w-full outline-none placeholder:text-outline"
+                        placeholder="Search questions..."
+                      />
+                    </div>
+                    {user && (
+                      <button
+                        onClick={() => setShowQuestionForm(v => !v)}
+                        className="px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:opacity-90 transition-opacity flex items-center gap-2"
+                      >
+                        <span className="material-symbols-outlined text-sm">add</span>
+                        Ask
+                      </button>
+                    )}
                   </div>
-                  {[
-                    { q: 'How does Luminous Logic differ from traditional Design Thinking?', answers: 12, votes: 34 },
-                    { q: 'Can the neural mesh framework be applied to mobile-first interfaces?', answers: 8, votes: 21 },
-                    { q: 'What prerequisites should I complete before Module 3?', answers: 5, votes: 15 },
-                  ].map((item, i) => (
-                    <div key={i} className="p-5 bg-surface-container-lowest rounded-2xl border border-outline-variant/10 flex items-start gap-4 hover:shadow-sm transition-shadow cursor-pointer group">
-                      <div className="flex flex-col items-center gap-1 text-center min-w-[50px]">
-                        <span className="text-lg font-bold font-mono text-primary">{item.votes}</span>
-                        <span className="text-[10px] text-outline uppercase font-mono">votes</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold text-on-surface text-sm group-hover:text-primary transition-colors mb-2">{item.q}</p>
-                        <span className="text-xs text-outline font-mono">{item.answers} answers</span>
+
+                  {/* Ask question form */}
+                  {showQuestionForm && user && (
+                    <div className="bg-white rounded-2xl border border-outline-variant/10 p-5 space-y-3">
+                      <h3 className="font-bold text-on-surface">Ask a Question</h3>
+                      <input
+                        value={newQuestion.title}
+                        onChange={e => setNewQuestion(q => ({ ...q, title: e.target.value }))}
+                        placeholder="Question title..."
+                        className="w-full px-3 py-2 border border-outline-variant/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <textarea
+                        value={newQuestion.body}
+                        onChange={e => setNewQuestion(q => ({ ...q, body: e.target.value }))}
+                        placeholder="Describe your question in detail (optional)..."
+                        rows={3}
+                        className="w-full px-3 py-2 border border-outline-variant/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          disabled={submittingQuestion || !newQuestion.title.trim()}
+                          onClick={async () => {
+                            setSubmittingQuestion(true);
+                            const { data, error } = await supabase.from('questions').insert({
+                              course_id: id,
+                              user_id: user.id,
+                              title: newQuestion.title,
+                              body: newQuestion.body,
+                            }).select(`*, profiles:user_id (full_name, avatar_url)`).single();
+                            if (!error && data) {
+                              setQuestions(qs => [data, ...qs]);
+                              setNewQuestion({ title: '', body: '' });
+                              setShowQuestionForm(false);
+                            }
+                            setSubmittingQuestion(false);
+                          }}
+                          className="flex-1 bg-primary text-white py-2 rounded-xl text-sm font-bold disabled:opacity-50"
+                        >
+                          {submittingQuestion ? 'Posting...' : 'Post Question'}
+                        </button>
+                        <button onClick={() => setShowQuestionForm(false)} className="flex-1 bg-surface-container-low py-2 rounded-xl text-sm font-bold">Cancel</button>
                       </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Questions list */}
+                  {questions
+                    .filter(q => !qaSearch || q.title.toLowerCase().includes(qaSearch.toLowerCase()))
+                    .map(q => (
+                      <div key={q.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden">
+                        <button
+                          className="w-full flex items-start gap-4 p-5 hover:bg-surface-container-low/40 transition-colors text-left group"
+                          onClick={async () => {
+                            if (expandedQuestion === q.id) { setExpandedQuestion(null); return; }
+                            setExpandedQuestion(q.id);
+                            if (!answers[q.id]) {
+                              const { data } = await supabase
+                                .from('answers')
+                                .select(`*, profiles:user_id (full_name, avatar_url)`)
+                                .eq('question_id', q.id)
+                                .order('created_at', { ascending: true });
+                              setAnswers(a => ({ ...a, [q.id]: data || [] }));
+                            }
+                          }}
+                        >
+                          <div className="flex flex-col items-center gap-1 min-w-[44px]">
+                            <button
+                              onClick={async e => {
+                                e.stopPropagation();
+                                await supabase.from('questions').update({ upvotes: q.upvotes + 1 }).eq('id', q.id);
+                                setQuestions(qs => qs.map(x => x.id === q.id ? { ...x, upvotes: x.upvotes + 1 } : x));
+                              }}
+                              className="material-symbols-outlined text-outline hover:text-primary text-sm transition-colors"
+                            >
+                              arrow_upward
+                            </button>
+                            <span className="text-sm font-bold font-mono text-primary">{q.upvotes}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-bold text-on-surface text-sm group-hover:text-primary transition-colors">{q.title}</p>
+                            {q.body && <p className="text-xs text-outline mt-1 line-clamp-1">{q.body}</p>}
+                            <div className="flex items-center gap-3 mt-2 text-xs text-outline">
+                              <span>{q.profiles?.full_name || 'User'}</span>
+                              <span>·</span>
+                              <span>{new Date(q.created_at).toLocaleDateString()}</span>
+                              {q.is_answered && (
+                                <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                                  <span className="material-symbols-outlined text-[12px]">check_circle</span> Answered
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className="material-symbols-outlined text-outline text-sm transition-transform" style={{
+                            transform: expandedQuestion === q.id ? 'rotate(180deg)' : 'rotate(0deg)'
+                          }}>expand_more</span>
+                        </button>
+
+                        {expandedQuestion === q.id && (
+                          <div className="border-t border-outline-variant/10 bg-white px-5 pb-5 pt-4 space-y-4">
+                            {q.body && <p className="text-sm text-on-surface-variant">{q.body}</p>}
+                            {(answers[q.id] || []).map((ans: any) => (
+                              <div key={ans.id} className={`flex gap-3 p-3 rounded-xl ${ans.is_accepted ? 'bg-emerald-50 border border-emerald-200' : 'bg-surface-container-low'}`}>
+                                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold flex-shrink-0">
+                                  {(ans.profiles?.full_name || '?').charAt(0)}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-bold text-on-surface">{ans.profiles?.full_name || 'User'}</span>
+                                    {ans.is_accepted && <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold">Best Answer</span>}
+                                  </div>
+                                  <p className="text-sm text-on-surface-variant">{ans.body}</p>
+                                </div>
+                              </div>
+                            ))}
+                            {(answers[q.id] || []).length === 0 && (
+                              <p className="text-xs text-outline">No answers yet. Be the first!</p>
+                            )}
+                            {user && (
+                              <div className="flex gap-2 pt-1">
+                                <input
+                                  value={newAnswer[q.id] || ''}
+                                  onChange={e => setNewAnswer(a => ({ ...a, [q.id]: e.target.value }))}
+                                  placeholder="Write an answer..."
+                                  className="flex-1 px-3 py-2 border border-outline-variant/20 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 bg-white"
+                                />
+                                <button
+                                  disabled={!newAnswer[q.id]?.trim()}
+                                  onClick={async () => {
+                                    const body = newAnswer[q.id];
+                                    if (!body?.trim()) return;
+                                    const { data } = await supabase.from('answers')
+                                      .insert({ question_id: q.id, user_id: user.id, body })
+                                      .select(`*, profiles:user_id (full_name, avatar_url)`).single();
+                                    if (data) {
+                                      setAnswers(a => ({ ...a, [q.id]: [...(a[q.id] || []), data] }));
+                                      setNewAnswer(a => ({ ...a, [q.id]: '' }));
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-primary text-white rounded-xl text-sm font-bold disabled:opacity-40"
+                                >
+                                  Post
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                  {questions.filter(q => !qaSearch || q.title.toLowerCase().includes(qaSearch.toLowerCase())).length === 0 && (
+                    <div className="text-center py-10">
+                      <p className="text-on-surface-variant text-sm">No questions yet. Ask the first one!</p>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </div>

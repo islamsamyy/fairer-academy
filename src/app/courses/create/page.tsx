@@ -1,408 +1,542 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence , Variants } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
+type Lesson = {
+  id: string; // temp local id
+  title: string;
+  description: string;
+  videoFile: File | null;
+  videoPreview: string;
+  uploading: boolean;
+  uploaded: boolean;
+  video_url: string;
+  duration_seconds: number;
+  is_free: boolean;
 };
 
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 20 },
-  },
+const STEPS = ['Course Info', 'Curriculum', 'Media', 'Publish'];
+
+const categories = ['Design & Theory', 'Advanced Engineering', 'Digital Humanities', 'Ethereal Arts'];
+const levels: Record<string, string> = {
+  beginner: 'Beginner',
+  intermediate: 'Intermediate',
+  advanced: 'Advanced',
 };
 
 export default function CourseCreationPage() {
   const router = useRouter();
-  const [showToast, setShowToast] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
   const [user, setUser] = useState<User | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  // Form State
+  // Step 1: Course Info
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Design & Theory');
-  const [level, setLevel] = useState('Beginner (Initiate)');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState(categories[0]);
+  const [level, setLevel] = useState('beginner');
   const [price, setPrice] = useState('0');
+  const [whatYouLearn, setWhatYouLearn] = useState('');
+  const [requirements, setRequirements] = useState('');
+
+  // Step 2: Curriculum
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+
+  // Step 3: Media
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState('');
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.push('/login');
-      } else {
-        setUser(user);
-      }
+      if (!user) router.push('/login');
+      else setUser(user);
     });
   }, [router]);
 
-  const handlePublish = async () => {
-    if (!user) return;
-    if (!title || !description) {
-      setError('Please provide a title and description.');
-      return;
-    }
+  const addLesson = () => {
+    setLessons([...lessons, {
+      id: crypto.randomUUID(),
+      title: '',
+      description: '',
+      videoFile: null,
+      videoPreview: '',
+      uploading: false,
+      uploaded: false,
+      video_url: '',
+      duration_seconds: 0,
+      is_free: lessons.length === 0, // first lesson free by default
+    }]);
+  };
 
-    setLoading(true);
-    setError(null);
+  const updateLesson = (id: string, patch: Partial<Lesson>) => {
+    setLessons(ls => ls.map(l => l.id === id ? { ...l, ...patch } : l));
+  };
 
+  const removeLesson = (id: string) => {
+    setLessons(ls => ls.filter(l => l.id !== id));
+  };
+
+  const handleVideoSelect = (lessonId: string, file: File) => {
+    const preview = URL.createObjectURL(file);
+    updateLesson(lessonId, { videoFile: file, videoPreview: preview, uploaded: false, video_url: '' });
+  };
+
+  const uploadVideo = async (lessonId: string) => {
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (!lesson?.videoFile || !user) return;
+    updateLesson(lessonId, { uploading: true });
     try {
-      const { data, error: publishError } = await supabase
+      const ext = lesson.videoFile.name.split('.').pop();
+      const path = `${user.id}/${lessonId}.${ext}`;
+      const { error } = await supabase.storage
+        .from('course-videos')
+        .upload(path, lesson.videoFile, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('course-videos').getPublicUrl(path);
+      updateLesson(lessonId, { uploading: false, uploaded: true, video_url: publicUrl });
+    } catch (err: any) {
+      updateLesson(lessonId, { uploading: false });
+      alert('Video upload failed: ' + err.message);
+    }
+  };
+
+  const handleThumbnailSelect = async (file: File) => {
+    setThumbnailFile(file);
+    setThumbnailPreview(URL.createObjectURL(file));
+    if (!user) return;
+    setUploadingThumbnail(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/thumb-${Date.now()}.${ext}`;
+      await supabase.storage.from('course-thumbnails').upload(path, file, { upsert: true });
+      const { data: { publicUrl } } = supabase.storage.from('course-thumbnails').getPublicUrl(path);
+      setThumbnailUrl(publicUrl);
+    } catch (err: any) {
+      alert('Thumbnail upload failed: ' + err.message);
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const handlePublish = async (isDraft = false) => {
+    if (!user) return;
+    if (!title.trim() || !description.trim()) { setError('Title and description are required.'); return; }
+    setPublishing(true);
+    setError(null);
+    try {
+      const { data: courseData, error: courseErr } = await supabase
         .from('courses')
-        .insert([
-          {
-            title,
-            description,
-            category,
-            level,
-            price: parseFloat(price),
-            instructor_id: user.id,
-            is_published: true, // Auto-publish for now
-          },
-        ])
+        .insert({
+          title,
+          description,
+          category,
+          level,
+          price: parseFloat(price) || 0,
+          instructor_id: user.id,
+          is_published: !isDraft,
+          thumbnail_url: thumbnailUrl || null,
+          total_duration_minutes: Math.ceil(
+            lessons.reduce((s, l) => s + (l.duration_seconds || 0), 0) / 60
+          ),
+        })
         .select()
         .single();
+      if (courseErr) throw courseErr;
 
-      if (publishError) throw publishError;
+      if (lessons.length > 0) {
+        const lessonRows = lessons.map((l, idx) => ({
+          course_id: courseData.id,
+          title: l.title || `Lesson ${idx + 1}`,
+          description: l.description,
+          video_url: l.video_url || null,
+          order_index: idx,
+          is_free: l.is_free,
+          duration_seconds: l.duration_seconds || 0,
+        }));
+        const { error: lessonErr } = await supabase.from('lessons').insert(lessonRows);
+        if (lessonErr) throw lessonErr;
+      }
 
-      setShowToast(true);
-      setTimeout(() => {
-        setShowToast(false);
-        router.push('/dashboard/instructor');
-      }, 2000);
+      router.push(`/dashboard/instructor?created=${courseData.id}`);
     } catch (err: any) {
-      setError(err.message || 'Failed to publish course.');
+      setError(err.message || 'Failed to publish course');
     } finally {
-      setLoading(false);
+      setPublishing(false);
     }
   };
 
-  const handleSaveDraft = () => {
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
-  };
+  const canProceed = [
+    title.trim().length > 0 && description.trim().length > 0,
+    lessons.length > 0,
+    true, // media optional
+    true,
+  ];
 
   return (
-    <div className="bg-background font-body text-on-background min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
-      {/* TopNavBar */}
-
-      <main className="pt-20 min-h-screen flex">
-        {/* Progress Sidebar */}
-        <aside className="hidden lg:flex h-[calc(100vh-5rem)] w-72 flex-col sticky top-20 left-0 bg-surface-container-lowest dark:bg-slate-950/50 p-6 gap-y-2 border-r border-surface-container-highest/30 z-10">
-          <div className="mb-8 px-2">
-            <h2 className="font-headline text-lg font-bold text-on-surface">Course Builder</h2>
-            <p className="text-xs text-outline font-mono uppercase tracking-widest mt-1">
-              Project #8229
-            </p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 p-4 bg-white dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 shadow-sm rounded-xl font-['Inter'] text-sm font-medium transition-transform transform translate-x-2 border border-surface-container-highest/20 cursor-default">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                info
-              </span>
-              <span>Step 1: Basic Info</span>
-            </div>
-            <div className="flex items-center gap-3 p-4 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all duration-300 rounded-xl font-['Inter'] text-sm font-medium cursor-pointer group">
-              <span className="material-symbols-outlined group-hover:text-cyan-600 transition-colors">account_tree</span>
-              <span className="group-hover:text-cyan-600 transition-colors">Step 2: Curriculum</span>
-            </div>
-            <div className="flex items-center gap-3 p-4 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all duration-300 rounded-xl font-['Inter'] text-sm font-medium cursor-pointer group">
-              <span className="material-symbols-outlined group-hover:text-cyan-600 transition-colors">payments</span>
-              <span className="group-hover:text-cyan-600 transition-colors">Step 3: Pricing</span>
-            </div>
-            <div className="flex items-center gap-3 p-4 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-all duration-300 rounded-xl font-['Inter'] text-sm font-medium cursor-pointer group">
-              <span className="material-symbols-outlined group-hover:text-cyan-600 transition-colors">verified</span>
-              <span className="group-hover:text-cyan-600 transition-colors">Step 4: Review</span>
-            </div>
-          </div>
-          <div className="mt-auto p-4 bg-surface-container-low rounded-xl border border-transparent hover:border-surface-container-highest transition-colors">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-semibold text-on-surface-variant">Overall Progress</span>
-              <span className="text-xs font-mono text-primary font-bold">25%</span>
-            </div>
-            <div className="w-full bg-outline-variant/30 h-1.5 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '25%' }}
-                transition={{ duration: 1, ease: 'easeOut' }}
-                className="bg-gradient-to-r from-primary to-primary-container h-full rounded-full"
-              ></motion.div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <section className="flex-1 p-6 sm:p-12 max-w-5xl mx-auto overflow-y-auto w-full">
-          <motion.header
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-12"
-          >
-            <h1 className="text-4xl font-headline font-bold tracking-tight text-on-background mb-4">
-              Initialize Your Wisdom
-            </h1>
-            <p className="text-on-surface-variant max-w-2xl leading-relaxed">
-              Let's define the fundamental essence of your course. This information will form the
-              digital storefront of your educational sanctuary.
-            </p>
-          </motion.header>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-12 pb-24"
-          >
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-error-container text-on-error-container p-4 rounded-xl text-sm font-medium"
-              >
-                {error}
-              </motion.div>
-            )}
-            {/* Course Identity Section */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              <div className="md:col-span-1">
-                <h3 className="font-headline font-semibold text-lg text-on-surface">Course Identity</h3>
-                <p className="text-sm text-outline mt-2 leading-relaxed">
-                  The title and subtitle are the first interaction points for your future scholars.
-                </p>
-              </div>
-              <div className="md:col-span-2 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-on-surface-variant ml-1">
-                    Course Title
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-low border border-transparent rounded-xl p-4 focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant hover:bg-surface-container outline-none"
-                    placeholder="e.g., Quantum Architecture in Modern Web"
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-on-surface-variant ml-1">
-                    Price ($)
-                  </label>
-                  <input
-                    className="w-full bg-surface-container-low border border-transparent rounded-xl p-4 focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface placeholder:text-outline-variant hover:bg-surface-container outline-none"
-                    placeholder="e.g., 49.99"
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-on-surface-variant ml-1">
-                      Category
-                    </label>
-                    <div className="relative">
-                      <select 
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="w-full bg-surface-container-low border border-transparent rounded-xl p-4 focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface hover:bg-surface-container outline-none appearance-none cursor-pointer"
-                      >
-                        <option>Design & Theory</option>
-                        <option>Advanced Engineering</option>
-                        <option>Digital Humanities</option>
-                        <option>Ethereal Arts</option>
-                      </select>
-                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline-variant">
-                        expand_more
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-on-surface-variant ml-1">
-                      Instructional Level
-                    </label>
-                    <div className="relative">
-                      <select 
-                        value={level}
-                        onChange={(e) => setLevel(e.target.value)}
-                        className="w-full bg-surface-container-low border border-transparent rounded-xl p-4 focus:ring-2 focus:ring-primary/40 focus:bg-white transition-all text-on-surface hover:bg-surface-container outline-none appearance-none cursor-pointer"
-                      >
-                        <option>Beginner (Initiate)</option>
-                        <option>Intermediate (Scholar)</option>
-                        <option>Advanced (Master)</option>
-                        <option>Elite (Legendary)</option>
-                      </select>
-                      <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline-variant">
-                        expand_more
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Media Section */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              <div className="md:col-span-1">
-                <h3 className="font-headline font-semibold text-lg text-on-surface">Visual Vessel</h3>
-                <p className="text-sm text-outline mt-2 leading-relaxed">
-                  Upload a high-fidelity thumbnail. This image represents the aesthetic soul of your
-                  content.
-                </p>
-              </div>
-              <div className="md:col-span-2">
-                <div className="relative group">
-                  <div className="w-full aspect-video rounded-2xl bg-surface-container-low border border-dashed border-outline/30 flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-surface-container transition-all group-active:scale-[0.99] overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-surface-container/20 group-hover:opacity-100 opacity-0 transition-opacity"></div>
-                    <div className="w-16 h-16 rounded-full bg-primary-container/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-primary-container/40 transition-all z-10">
-                      <span className="material-symbols-outlined text-primary text-3xl">
-                        cloud_upload
-                      </span>
-                    </div>
-                    <h4 className="font-medium text-on-surface z-10">
-                      Drag and drop your thumbnail here
-                    </h4>
-                    <p className="text-xs text-outline mt-2 z-10">
-                      PNG, JPG or WebP (16:9 ratio recommended). Max 5MB.
-                    </p>
-                    <button className="mt-6 px-6 py-2 rounded-full border border-primary text-primary text-sm font-medium hover:bg-primary hover:text-white transition-colors z-10 outline-none">
-                      Browse Files
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Description Section */}
-            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-              <div className="md:col-span-1">
-                <h3 className="font-headline font-semibold text-lg text-on-surface">
-                  Detailed Discourse
-                </h3>
-                <p className="text-sm text-outline mt-2 leading-relaxed">
-                  Provide a comprehensive breakdown using Markdown formatting for structured elegance.
-                </p>
-              </div>
-              <div className="md:col-span-2 bg-white rounded-2xl shadow-sm overflow-hidden border border-outline-variant/20 focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-transparent transition-all">
-                <div className="flex items-center justify-between px-6 py-3 bg-surface-container-lowest border-b border-outline-variant/10">
-                  <div className="flex gap-4">
-                    <button className="text-primary transition-colors font-mono text-sm font-bold border-b border-primary pb-0.5 outline-none">
-                      Write
-                    </button>
-                    <button className="text-outline hover:text-primary transition-colors font-mono text-sm outline-none">
-                      Preview
-                    </button>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-[18px] text-outline cursor-pointer hover:text-primary transition-colors hover:scale-110">
-                      format_bold
-                    </span>
-                    <span className="material-symbols-outlined text-[18px] text-outline cursor-pointer hover:text-primary transition-colors hover:scale-110">
-                      format_italic
-                    </span>
-                    <span className="material-symbols-outlined text-[18px] text-outline cursor-pointer hover:text-primary transition-colors hover:scale-110">
-                      link
-                    </span>
-                    <span className="material-symbols-outlined text-[18px] text-outline cursor-pointer hover:text-primary transition-colors hover:scale-110">
-                      list
-                    </span>
-                  </div>
-                </div>
-                <textarea
-                  className="w-full p-6 bg-transparent border-none focus:ring-0 text-on-surface leading-relaxed font-body placeholder:text-outline-variant/70 resize-y min-h-[250px] outline-none"
-                  placeholder="Type your course description here... Use # for headers, ** for bold."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                ></textarea>
-                <div className="px-6 py-3 bg-surface-container-low/50 flex justify-between items-center border-t border-outline-variant/10">
-                  <span className="text-[10px] font-mono text-outline uppercase tracking-tighter">
-                    Markdown Support Enabled
-                  </span>
-                  <span className="text-[10px] font-mono text-outline font-medium">0 / 2500</span>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Action Footer */}
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col-reverse sm:flex-row items-center justify-between pt-8 border-t border-outline-variant/20 gap-4"
-            >
+    <div className="min-h-screen bg-surface font-body">
+      {/* Header */}
+      <header className="fixed top-0 w-full z-50 h-16 bg-white border-b border-outline-variant/10 flex items-center px-6 gap-6">
+        <Link href="/dashboard/instructor" className="text-sm text-outline hover:text-on-surface transition-colors flex items-center gap-1">
+          <span className="material-symbols-outlined text-sm">arrow_back</span>
+          Back
+        </Link>
+        <div className="flex-1 flex items-center justify-center gap-2">
+          {STEPS.map((s, i) => (
+            <React.Fragment key={s}>
               <button
-                onClick={handleSaveDraft}
-                className="w-full sm:w-auto px-8 py-3 rounded-xl text-outline font-headline font-bold hover:text-on-surface hover:bg-surface-container transition-all outline-none"
+                onClick={() => i < step && setStep(i)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  i === step ? 'bg-primary text-white' :
+                  i < step ? 'bg-emerald-100 text-emerald-700 cursor-pointer' :
+                  'bg-surface-container text-outline'
+                }`}
               >
-                Save Draft
+                <span className="w-4 h-4 flex items-center justify-center">
+                  {i < step
+                    ? <span className="material-symbols-outlined text-[14px]">check</span>
+                    : <span>{i + 1}</span>}
+                </span>
+                {s}
               </button>
-              <div className="flex gap-4 w-full sm:w-auto">
-                <button className="flex-1 sm:flex-none px-6 sm:px-8 py-3 rounded-xl bg-surface-container text-on-surface-variant font-headline font-bold hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2 outline-none hover:text-on-surface">
-                  Cancel
-                </button>
-                <button 
-                  onClick={handlePublish}
-                  disabled={loading}
-                  className="flex-1 sm:flex-none px-6 sm:px-10 py-3 rounded-xl bg-gradient-to-r text-white font-headline font-bold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group from-[#00D9FF] to-[#009fb8] hover:shadow-primary/40 active:scale-95 outline-none filter hover:brightness-110 disabled:opacity-70"
+              {i < STEPS.length - 1 && <span className="h-px w-6 bg-outline-variant/30" />}
+            </React.Fragment>
+          ))}
+        </div>
+        <button
+          onClick={() => handlePublish(true)}
+          disabled={publishing}
+          className="text-sm text-outline hover:text-on-surface font-medium"
+        >
+          Save Draft
+        </button>
+      </header>
+
+      <main className="pt-20 pb-24 max-w-4xl mx-auto px-4 sm:px-8">
+        <AnimatePresence mode="wait">
+
+          {/* ── STEP 0: Course Info ── */}
+          {step === 0 && (
+            <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 py-8">
+              <div>
+                <h1 className="text-3xl font-headline font-bold text-on-surface mb-1">Course Details</h1>
+                <p className="text-on-surface-variant text-sm">Tell students what they'll learn</p>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Course Title *</label>
+                  <input
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="e.g. Complete React & TypeScript Masterclass"
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Description *</label>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Describe your course in detail..."
+                    rows={5}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Category</label>
+                    <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white">
+                      {categories.map(c => <option key={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Level</label>
+                    <select value={level} onChange={e => setLevel(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white">
+                      {Object.entries(levels).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Price (USD)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white"
+                    />
+                    <p className="text-[10px] text-outline mt-1">Set 0 for a free course</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">What Students Will Learn (one per line)</label>
+                  <textarea
+                    value={whatYouLearn}
+                    onChange={e => setWhatYouLearn(e.target.value)}
+                    placeholder="Build real-world projects&#10;Understand core principles&#10;Get industry-ready skills"
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white resize-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Prerequisites (one per line)</label>
+                  <textarea
+                    value={requirements}
+                    onChange={e => setRequirements(e.target.value)}
+                    placeholder="Basic understanding of HTML&#10;A computer with internet"
+                    rows={3}
+                    className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm bg-white resize-none font-mono"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 1: Curriculum ── */}
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6 py-8">
+              <div>
+                <h1 className="text-3xl font-headline font-bold text-on-surface mb-1">Curriculum</h1>
+                <p className="text-on-surface-variant text-sm">Add lessons and upload their videos</p>
+              </div>
+
+              <div className="space-y-4">
+                {lessons.map((lesson, idx) => (
+                  <div key={lesson.id} className="bg-white rounded-2xl border border-outline-variant/10 overflow-hidden shadow-sm">
+                    <div className="flex items-center gap-3 px-5 py-3 bg-surface-container-low/50 border-b border-outline-variant/10">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">{idx + 1}</span>
+                      <input
+                        value={lesson.title}
+                        onChange={e => updateLesson(lesson.id, { title: e.target.value })}
+                        placeholder="Lesson title..."
+                        className="flex-1 bg-transparent text-sm font-bold text-on-surface placeholder:text-outline focus:outline-none"
+                      />
+                      <label className="flex items-center gap-1.5 text-xs text-outline cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={lesson.is_free}
+                          onChange={e => updateLesson(lesson.id, { is_free: e.target.checked })}
+                          className="rounded"
+                        />
+                        Free preview
+                      </label>
+                      <button onClick={() => removeLesson(lesson.id)} className="text-outline hover:text-error transition-colors">
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      <textarea
+                        value={lesson.description}
+                        onChange={e => updateLesson(lesson.id, { description: e.target.value })}
+                        placeholder="Lesson description (optional)..."
+                        rows={2}
+                        className="w-full px-3 py-2 text-sm border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none bg-surface-container-low"
+                      />
+
+                      {/* Video Upload */}
+                      <div>
+                        {lesson.videoPreview ? (
+                          <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+                            <video src={lesson.videoPreview} className="w-full h-full object-contain" controls />
+                            {!lesson.uploaded && (
+                              <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                                <button
+                                  onClick={() => uploadVideo(lesson.id)}
+                                  disabled={lesson.uploading}
+                                  className="bg-primary text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-primary/90 disabled:opacity-60 flex items-center gap-2"
+                                >
+                                  {lesson.uploading ? (
+                                    <><span className="animate-spin material-symbols-outlined text-sm">progress_activity</span> Uploading...</>
+                                  ) : (
+                                    <><span className="material-symbols-outlined text-sm">cloud_upload</span> Upload Video</>
+                                  )}
+                                </button>
+                                <button onClick={() => updateLesson(lesson.id, { videoFile: null, videoPreview: '' })} className="text-white/70 text-xs hover:text-white">
+                                  Change video
+                                </button>
+                              </div>
+                            )}
+                            {lesson.uploaded && (
+                              <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[12px]">check_circle</span> Uploaded
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center h-32 rounded-xl border-2 border-dashed border-outline-variant/30 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer group">
+                            <span className="material-symbols-outlined text-3xl text-outline group-hover:text-primary transition-colors mb-2">video_file</span>
+                            <span className="text-sm text-outline group-hover:text-primary font-medium transition-colors">Click to select video</span>
+                            <span className="text-xs text-outline/60 mt-1">MP4, MOV, WebM</span>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              className="hidden"
+                              onChange={e => e.target.files?.[0] && handleVideoSelect(lesson.id, e.target.files[0])}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  onClick={addLesson}
+                  className="w-full py-4 border-2 border-dashed border-primary/20 rounded-2xl text-primary font-bold text-sm hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
                 >
-                  {loading ? 'Publishing...' : 'Publish Course'}
-                  {!loading && (
-                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-                      publish
-                    </span>
+                  <span className="material-symbols-outlined">add_circle</span>
+                  Add Lesson
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 2: Media ── */}
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 py-8">
+              <div>
+                <h1 className="text-3xl font-headline font-bold text-on-surface mb-1">Course Media</h1>
+                <p className="text-on-surface-variant text-sm">Upload a thumbnail that represents your course</p>
+              </div>
+
+              <div
+                onClick={() => thumbnailInputRef.current?.click()}
+                className="relative w-full aspect-video max-h-80 rounded-2xl border-2 border-dashed border-outline-variant/30 hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer overflow-hidden group"
+              >
+                {thumbnailPreview ? (
+                  <>
+                    <img src={thumbnailPreview} alt="Thumbnail" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">Change Thumbnail</span>
+                    </div>
+                    {uploadingThumbnail && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm animate-pulse">Uploading...</span>
+                      </div>
+                    )}
+                    {thumbnailUrl && !uploadingThumbnail && (
+                      <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[12px]">check_circle</span> Saved
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <span className="material-symbols-outlined text-5xl text-outline group-hover:text-primary transition-colors">image</span>
+                    <span className="text-sm text-outline group-hover:text-primary font-medium transition-colors">Click to upload course thumbnail</span>
+                    <span className="text-xs text-outline/60">JPG, PNG, WebP — recommended 1280×720</span>
+                  </div>
+                )}
+                <input
+                  ref={thumbnailInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => e.target.files?.[0] && handleThumbnailSelect(e.target.files[0])}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── STEP 3: Review & Publish ── */}
+          {step === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 py-8">
+              <div>
+                <h1 className="text-3xl font-headline font-bold text-on-surface mb-1">Review & Publish</h1>
+                <p className="text-on-surface-variant text-sm">Everything look good? Publish your course.</p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-outline-variant/10 p-6 space-y-4">
+                <div className="flex gap-4">
+                  {thumbnailPreview && (
+                    <img src={thumbnailPreview} alt="" className="w-24 h-16 object-cover rounded-xl flex-shrink-0" />
+                  )}
+                  <div>
+                    <h2 className="font-bold text-on-surface text-xl">{title || '(untitled)'}</h2>
+                    <p className="text-sm text-outline mt-1">{category} · {levels[level]} · {price === '0' ? 'Free' : `$${price}`}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-on-surface-variant">{description}</p>
+                <div className="border-t border-outline-variant/10 pt-4 flex gap-6 text-sm text-outline font-mono">
+                  <span><strong className="text-on-surface">{lessons.length}</strong> lessons</span>
+                  <span><strong className="text-on-surface">{lessons.filter(l => l.uploaded).length}</strong> videos uploaded</span>
+                  <span><strong className="text-on-surface">{lessons.filter(l => l.is_free).length}</strong> free preview</span>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-4 bg-error/10 text-error rounded-xl text-sm font-medium">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handlePublish(false)}
+                  disabled={publishing}
+                  className="flex-1 bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-bold text-sm hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                >
+                  {publishing ? (
+                    <><span className="animate-spin material-symbols-outlined text-sm">progress_activity</span> Publishing...</>
+                  ) : (
+                    <><span className="material-symbols-outlined text-sm">rocket_launch</span> Publish Course</>
                   )}
                 </button>
+                <button
+                  onClick={() => handlePublish(true)}
+                  disabled={publishing}
+                  className="flex-1 border border-outline-variant/20 text-on-surface py-4 rounded-xl font-bold text-sm hover:bg-surface-container transition-colors"
+                >
+                  Save as Draft
+                </button>
               </div>
             </motion.div>
-          </motion.div>
-        </section>
-      </main>
+          )}
+        </AnimatePresence>
 
-      {/* Success Toast */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 100, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed bottom-8 right-8 bg-white dark:bg-slate-800 shadow-2xl rounded-2xl p-4 flex items-center gap-4 border border-outline-variant/20 z-50 overflow-hidden"
+        {/* Navigation Buttons */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur border-t border-outline-variant/10 px-6 py-4 flex justify-between items-center">
+          <button
+            onClick={() => setStep(s => Math.max(0, s - 1))}
+            disabled={step === 0}
+            className="flex items-center gap-2 text-sm font-bold text-on-surface-variant hover:text-on-surface disabled:opacity-30 transition-colors"
           >
-            <div className="absolute inset-0 bg-primary/5"></div>
-            <div className="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant relative z-10 shrink-0">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>
-                auto_awesome
-              </span>
-            </div>
-            <div className="relative z-10">
-              <p className="text-sm font-bold text-on-surface">Progress Saved</p>
-              <p className="text-xs text-outline font-medium">Your course core is safely stored.</p>
-            </div>
-            {/* Progress bar for toast dismiss */}
-            <motion.div
-              initial={{ width: '100%' }}
-              animate={{ width: 0 }}
-              transition={{ duration: 3, ease: 'linear' }}
-              className="absolute bottom-0 left-0 h-1 bg-secondary w-full"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            Previous
+          </button>
+
+          <span className="text-xs text-outline font-mono">{step + 1} / {STEPS.length}</span>
+
+          {step < STEPS.length - 1 ? (
+            <button
+              onClick={() => {
+                if (!canProceed[step]) {
+                  setError(step === 0 ? 'Please fill in title and description.' : 'Please add at least one lesson.');
+                  return;
+                }
+                setError(null);
+                setStep(s => s + 1);
+              }}
+              className="flex items-center gap-2 text-sm font-bold bg-primary text-white px-5 py-2.5 rounded-xl hover:opacity-90 active:scale-95 transition-all"
+            >
+              Next
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </button>
+          ) : null}
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,385 +1,431 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, Variants } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
-  },
-};
+type Tab = 'overview' | 'users' | 'courses' | 'reviews';
 
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { type: 'spring', stiffness: 100, damping: 20 },
-  },
+const ROLE_COLORS: Record<string, string> = {
+  admin: 'bg-red-100 text-red-700',
+  instructor: 'bg-blue-100 text-blue-700',
+  student: 'bg-emerald-100 text-emerald-700',
 };
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
-  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Overview data
+  const [stats, setStats] = useState({ users: 0, courses: 0, enrollments: 0, reviews: 0 });
+
+  // Users tab
+  const [users, setUsers] = useState<any[]>([]);
+  const [userSearch, setUserSearch] = useState('');
+
+  // Courses tab
+  const [courses, setCourses] = useState<any[]>([]);
+  const [courseFilter, setCourseFilter] = useState<'all' | 'published' | 'draft'>('all');
+
+  // Reviews tab
+  const [reviews, setReviews] = useState<any[]>([]);
+
+  const loadOverview = useCallback(async () => {
+    const [
+      { count: userCount },
+      { count: courseCount },
+      { count: enrollCount },
+      { count: reviewCount },
+    ] = await Promise.all([
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('courses').select('*', { count: 'exact', head: true }),
+      supabase.from('enrollments').select('*', { count: 'exact', head: true }),
+      supabase.from('reviews').select('*', { count: 'exact', head: true }),
+    ]);
+    setStats({
+      users: userCount || 0,
+      courses: courseCount || 0,
+      enrollments: enrollCount || 0,
+      reviews: reviewCount || 0,
+    });
+  }, []);
+
+  const loadUsers = useCallback(async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (data) setUsers(data);
+  }, []);
+
+  const loadCourses = useCallback(async () => {
+    const { data } = await supabase
+      .from('courses')
+      .select(`*, profiles:instructor_id (full_name)`)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (data) setCourses(data);
+  }, []);
+
+  const loadReviews = useCallback(async () => {
+    const { data } = await supabase
+      .from('reviews')
+      .select(`*, profiles:user_id (full_name), courses:course_id (title)`)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (data) setReviews(data);
+  }, []);
 
   useEffect(() => {
-    async function loadData() {
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-      if (profile?.role !== 'admin') {
-        router.push('/dashboard'); // redirect non-admins
-        return;
-      }
-
-      const { data: platformStats } = await supabase.from('platform_stats').select('*').maybeSingle();
-      if (platformStats) {
-        setStats(platformStats);
-      }
-
-      const { data: usersData } = await supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(5);
-      if (usersData) {
-        setRecentUsers(usersData);
-      }
-
+      if (!user) { router.push('/login'); return; }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (profile?.role !== 'admin') { router.push('/dashboard'); return; }
+      await Promise.all([loadOverview(), loadUsers(), loadCourses(), loadReviews()]);
       setLoading(false);
     }
-    loadData();
-  }, [router]);
+    init();
+  }, [router, loadOverview, loadUsers, loadCourses, loadReviews]);
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center font-bold text-primary">Loading Admin Console...</div>;
-  }
+  const changeUserRole = async (userId: string, newRole: string) => {
+    setActionLoading(userId);
+    await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+    setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    setActionLoading(null);
+  };
+
+  const toggleCoursePublish = async (courseId: string, current: boolean) => {
+    setActionLoading(courseId);
+    await supabase.from('courses').update({ is_published: !current }).eq('id', courseId);
+    setCourses(cs => cs.map(c => c.id === courseId ? { ...c, is_published: !current } : c));
+    setActionLoading(null);
+  };
+
+  const deleteCourse = async (courseId: string) => {
+    if (!confirm('Delete this course? This cannot be undone.')) return;
+    setActionLoading(courseId);
+    await supabase.from('courses').delete().eq('id', courseId);
+    setCourses(cs => cs.filter(c => c.id !== courseId));
+    setActionLoading(null);
+    await loadOverview();
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    setActionLoading(reviewId);
+    await supabase.from('reviews').delete().eq('id', reviewId);
+    setReviews(rs => rs.filter(r => r.id !== reviewId));
+    setActionLoading(null);
+  };
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="text-primary font-bold animate-pulse">Loading Admin Console...</div>
+    </div>
+  );
+
+  const filteredCourses = courses.filter(c =>
+    courseFilter === 'all' ? true :
+    courseFilter === 'published' ? c.is_published :
+    !c.is_published
+  );
+
+  const filteredUsers = userSearch
+    ? users.filter(u => u.full_name?.toLowerCase().includes(userSearch.toLowerCase()))
+    : users;
+
+  const NAV: { id: Tab; icon: string; label: string }[] = [
+    { id: 'overview', icon: 'dashboard', label: 'Overview' },
+    { id: 'users', icon: 'group', label: `Users (${stats.users})` },
+    { id: 'courses', icon: 'library_books', label: `Courses (${stats.courses})` },
+    { id: 'reviews', icon: 'reviews', label: `Reviews (${stats.reviews})` },
+  ];
 
   return (
-    <div className="bg-surface text-on-background font-body min-h-screen selection:bg-primary-container/30">
-      {/* Top Navigation Anchor */}
-
-      {/* Sidebar Navigation Shell */}
-      <aside className="h-screen w-64 fixed left-0 top-0 pt-0 flex-col gap-2 p-4 border-r border-surface-container-highest/50 bg-surface-container-lowest/50 hidden lg:flex z-10">
-        <div className="mb-6 px-2 mt-4">
-          <h2 className="text-lg font-black text-on-surface uppercase tracking-widest font-headline">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-headline text-lg font-bold tracking-widest text-on-surface">Admin</span>
-            </div>
-          </h2>
-          <p className="text-[10px] text-outline font-mono">Luminous Logic System v4.2</p>
+    <div className="bg-[#f8fafc] font-body text-on-background min-h-screen">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 h-full w-56 bg-[#0d1b2a] text-white flex flex-col py-6 px-4 z-40">
+        <div className="px-2 mb-8">
+          <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1">Admin Console</p>
+          <h2 className="text-lg font-bold text-white">Fairer Academy</h2>
         </div>
-        <div className="space-y-1">
-          <Link href="/dashboard/admin" className="group flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-surface-container-highest/20 text-primary shadow-sm rounded-lg mx-2 font-medium transition-all duration-300 outline-none">
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">dashboard</span>
-            <span>Dashboard</span>
-          </Link>
-          <Link href="#" className="group flex items-center gap-3 p-3 text-slate-500 hover:text-on-surface hover:bg-surface-container mx-2 rounded-lg transition-all duration-200 font-medium outline-none">
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">gavel</span>
-            <span>Moderation</span>
-          </Link>
-          <Link href="#" className="group flex items-center gap-3 p-3 text-slate-500 hover:text-on-surface hover:bg-surface-container mx-2 rounded-lg transition-all duration-200 font-medium outline-none">
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">group</span>
-            <span>User Management</span>
-          </Link>
-          <Link href="#" className="group flex items-center gap-3 p-3 text-slate-500 hover:text-on-surface hover:bg-surface-container mx-2 rounded-lg transition-all duration-200 font-medium outline-none">
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">library_books</span>
-            <span>Content</span>
-          </Link>
-          <Link href="/settings" className="group flex items-center gap-3 p-3 text-slate-500 hover:text-on-surface hover:bg-surface-container mx-2 rounded-lg transition-all duration-200 font-medium outline-none">
-            <span className="material-symbols-outlined group-hover:scale-110 transition-transform">settings_input_component</span>
-            <span>Platform Settings</span>
-          </Link>
-        </div>
-        <div className="mt-auto space-y-1 border-t border-surface-container-highest/50 pt-4 px-2 pb-4">
-          <Link href="#" className="flex items-center gap-3 p-3 text-slate-500 hover:text-primary rounded-lg transition-colors outline-none shrink-0">
-            <span className="material-symbols-outlined">help_outline</span>
-            <span>Support</span>
-          </Link>
-          <Link href="/login" className="flex items-center gap-3 p-3 text-slate-500 hover:text-error hover:bg-error-container/10 rounded-lg transition-colors outline-none shrink-0 group">
-            <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">logout</span>
-            <span>Logout</span>
-          </Link>
-        </div>
+        <nav className="space-y-1 flex-1">
+          {NAV.map(n => (
+            <button
+              key={n.id}
+              onClick={() => setTab(n.id)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                tab === n.id ? 'bg-primary text-white' : 'text-white/60 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">{n.icon}</span>
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 px-3 py-2 text-white/40 hover:text-white text-xs font-medium transition-colors mt-4"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Back to App
+        </Link>
       </aside>
 
-      {/* Main Canvas */}
-      <main className="lg:pl-64 pt-0 min-h-screen pb-24 lg:pb-10">
-        <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-10">
-          
-          {/* Platform Pulse Header */}
-          <motion.section
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="flex flex-col sm:flex-row justify-between sm:items-end mb-6 gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-headline font-bold text-on-background tracking-tight">Platform Pulse</h1>
-                <p className="text-outline mt-1 font-medium text-sm sm:text-base">Real-time ecosystem vital signs and growth metrics.</p>
+      {/* Main */}
+      <main className="ml-56 min-h-screen p-8">
+
+        {/* ── Overview ── */}
+        {tab === 'overview' && (
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface mb-8">Platform Overview</h1>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+              {[
+                { label: 'Total Users', value: stats.users, icon: 'group', color: 'text-blue-600 bg-blue-50' },
+                { label: 'Courses', value: stats.courses, icon: 'library_books', color: 'text-primary bg-primary/10' },
+                { label: 'Enrollments', value: stats.enrollments, icon: 'school', color: 'text-emerald-600 bg-emerald-50' },
+                { label: 'Reviews', value: stats.reviews, icon: 'star', color: 'text-amber-600 bg-amber-50' },
+              ].map(s => (
+                <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm"
+                >
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${s.color}`}>
+                    <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
+                  </div>
+                  <p className="text-3xl font-bold text-on-surface font-mono">{s.value.toLocaleString()}</p>
+                  <p className="text-sm text-outline mt-1">{s.label}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Recent Users preview */}
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-on-surface">Recent Users</h2>
+                <button onClick={() => setTab('users')} className="text-xs text-primary font-bold hover:underline">View all</button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button className="bg-white border border-surface-container-highest px-4 py-2 rounded-xl text-sm font-medium text-on-surface-variant hover:bg-surface-container transition-all outline-none">
-                  Export Report
-                </button>
-                <button className="bg-gradient-to-br from-primary to-primary-container px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm hover:shadow-primary/30 active:scale-95 transition-all outline-none flex items-center gap-2 group">
-                  <span className="material-symbols-outlined text-[18px] group-hover:rotate-180 transition-transform duration-500">refresh</span>
-                  Refresh Node
-                </button>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-outline uppercase tracking-wider border-b border-slate-100">
+                    <th className="text-left pb-3">Name</th>
+                    <th className="text-left pb-3">Role</th>
+                    <th className="text-left pb-3">Joined</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {users.slice(0, 8).map(u => (
+                    <tr key={u.id}>
+                      <td className="py-3 font-medium">{u.full_name || '—'}</td>
+                      <td className="py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${ROLE_COLORS[u.role] || 'bg-slate-100 text-slate-600'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="py-3 text-outline text-xs font-mono">{new Date(u.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ── Users ── */}
+        {tab === 'users' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-on-surface">User Management</h1>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+                <input
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  placeholder="Search by name..."
+                  className="pl-9 pr-4 py-2 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 w-64"
+                />
               </div>
             </div>
-            
-            <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
-              {/* Metric Card */}
-              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-primary-container shadow-sm hover:shadow-md transition-shadow group">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="material-symbols-outlined text-primary bg-primary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">group</span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">+{stats?.new_users_30d || 0} this month</span>
-                </div>
-                <p className="text-outline text-xs font-semibold uppercase tracking-wider">Total Active Users</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.total_users || 0}</p>
-              </motion.div>
-              {/* Metric Card */}
-              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-secondary shadow-sm hover:shadow-md transition-shadow group">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="material-symbols-outlined text-secondary bg-secondary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">payments</span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-full">MRR</span>
-                </div>
-                <p className="text-outline text-xs font-semibold uppercase tracking-wider">MRR (Revenue)</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">${(stats?.mrr || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-              </motion.div>
-              {/* Metric Card */}
-              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-tertiary shadow-sm hover:shadow-md transition-shadow group">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="material-symbols-outlined text-tertiary bg-tertiary-container/10 p-2 rounded-lg group-hover:scale-110 transition-transform">school</span>
-                  <span className="text-[11px] font-mono font-bold text-slate-500 bg-slate-50 border border-slate-200 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <p className="text-outline text-xs font-semibold uppercase tracking-wider">Active Courses</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.published_courses || 0}</p>
-              </motion.div>
-              {/* Metric Card */}
-              <motion.div variants={itemVariants} className="bg-white p-6 rounded-xl border border-surface-container-highest/30 border-l-4 border-l-emerald-500 shadow-sm hover:shadow-md transition-shadow group">
-                <div className="flex justify-between items-start mb-4">
-                  <span className="material-symbols-outlined text-emerald-600 bg-emerald-50 p-2 rounded-lg group-hover:scale-110 transition-transform">local_library</span>
-                  <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-1 rounded-full">Active</span>
-                </div>
-                <p className="text-outline text-xs font-semibold uppercase tracking-wider">Total Enrollments</p>
-                <p className="text-3xl font-headline font-bold text-on-surface mt-1">{stats?.total_enrollments || 0}</p>
-              </motion.div>
-            </motion.div>
-          </motion.section>
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-outline uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                    <th className="text-left px-6 py-3">User</th>
+                    <th className="text-left px-6 py-3">Role</th>
+                    <th className="text-left px-6 py-3">Joined</th>
+                    <th className="text-left px-6 py-3">Change Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+                            {(u.full_name || '?').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-on-surface">{u.full_name || '—'}</p>
+                            <p className="text-xs text-outline font-mono">{u.id.slice(0, 8)}…</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${ROLE_COLORS[u.role] || 'bg-slate-100 text-slate-600'}`}>
+                          {u.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-outline text-xs font-mono">{new Date(u.created_at).toLocaleDateString()}</td>
+                      <td className="px-6 py-4">
+                        <select
+                          value={u.role}
+                          disabled={actionLoading === u.id}
+                          onChange={e => changeUserRole(u.id, e.target.value)}
+                          className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                        >
+                          <option value="student">student</option>
+                          <option value="instructor">instructor</option>
+                          <option value="admin">admin</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredUsers.length === 0 && (
+                <div className="text-center py-12 text-outline">No users found</div>
+              )}
+            </div>
+          </div>
+        )}
 
-          {/* Main Dashboard Grid */}
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            
-            {/* System Activity Visualization */}
-            <motion.div variants={itemVariants} className="xl:col-span-8 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container-highest/30 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary-container/10 rounded-full -mr-20 -mt-20 blur-3xl transition-all group-hover:bg-primary-container/15"></div>
-              <div className="flex flex-wrap gap-4 justify-between items-center mb-8 relative z-10">
-                <div>
-                  <h3 className="text-xl font-headline font-bold text-on-surface">System Activity</h3>
-                  <p className="text-outline text-sm mt-1 font-medium">Engagement frequency across 24h cycle</p>
-                </div>
-                <div className="relative">
-                  <select className="bg-surface-container border border-surface-container-highest/50 rounded-lg text-xs font-bold text-on-surface-variant focus:ring-2 focus:ring-primary/20 py-2 pl-3 pr-8 appearance-none cursor-pointer outline-none">
-                    <option>Last 24 Hours</option>
-                    <option>Last 7 Days</option>
-                    <option>Monthly View</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-outline text-[18px]">expand_more</span>
-                </div>
-              </div>
-              
-              <div className="h-64 flex items-end gap-1 sm:gap-2 relative z-10 border-b border-surface-container-highest/30 pb-2">
-                {[40, 65, 85, 55, 95, 45, 75, 35, 60, 90, 40, 70, 50, 80].map((height, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ duration: 1, ease: 'easeOut', delay: i * 0.05 }}
-                    className={`flex-1 rounded-t-lg transition-colors cursor-pointer relative group/bar ${
-                      height > 80 ? (i % 2 === 0 ? 'bg-primary-container' : 'bg-secondary') : 'bg-surface-container hover:bg-surface-container-highest'
+        {/* ── Courses ── */}
+        {tab === 'courses' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold text-on-surface">Course Management</h1>
+              <div className="flex gap-2">
+                {(['all', 'published', 'draft'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setCourseFilter(f)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all ${
+                      courseFilter === f ? 'bg-primary text-white' : 'bg-white border border-slate-200 text-outline hover:text-on-surface'
                     }`}
                   >
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-on-surface text-surface text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20">
-                      {height * 12} reqs
-                    </div>
-                  </motion.div>
+                    {f}
+                  </button>
                 ))}
               </div>
-              <div className="flex justify-between mt-3 text-[10px] font-mono text-outline uppercase tracking-widest font-bold">
-                <span>00:00</span>
-                <span>06:00</span>
-                <span className="hidden sm:inline">12:00</span>
-                <span>18:00</span>
-                <span>23:59</span>
-              </div>
-            </motion.div>
-
-            {/* Platform Health */}
-            <motion.div variants={itemVariants} className="xl:col-span-4 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col justify-between">
-              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 20% 20%, #00d9ff 0%, transparent 50%)' }}></div>
-              <div className="relative z-10">
-                <h3 className="text-xl font-headline font-bold mb-8 flex items-center gap-3 border-b border-white/10 pb-4">
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary-container animate-pulse shadow-[0_0_10px_#00d9ff]"></span>
-                  Platform Health
-                </h3>
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center group cursor-pointer">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">Main Database</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">cluster-eth-01</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-primary-fixed tracking-wider bg-primary-fixed/10 px-2 py-1 rounded border border-primary-fixed/20 shadow-[0_0_8px_rgba(0,217,255,0.1)]">OPERATIONAL</span>
-                  </div>
-                  <div className="flex justify-between items-center group cursor-pointer">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">Edge CDN</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">global-dist-v4</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-primary-fixed tracking-wider bg-primary-fixed/10 px-2 py-1 rounded border border-primary-fixed/20 shadow-[0_0_8px_rgba(0,217,255,0.1)]">OPERATIONAL</span>
-                  </div>
-                  <div className="flex justify-between items-center group cursor-pointer">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">API Gateway</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">gateway-primary</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-amber-300 tracking-wider bg-amber-400/10 px-2 py-1 rounded border border-amber-400/20 shadow-[0_0_8px_rgba(251,191,36,0.1)]">98% LOAD</span>
-                  </div>
-                  <div className="flex justify-between items-center group cursor-pointer">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">Auth Node</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">identity-svc</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-primary-fixed tracking-wider bg-primary-fixed/10 px-2 py-1 rounded border border-primary-fixed/20 shadow-[0_0_8px_rgba(0,217,255,0.1)]">OPERATIONAL</span>
-                  </div>
-                </div>
-              </div>
-              <button className="w-full mt-10 py-3.5 border border-white/20 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white/10 active:scale-95 transition-all text-white outline-none">
-                View Cloud Console
-              </button>
-            </motion.div>
-
-            {/* Moderation Queue */}
-            <motion.div variants={itemVariants} className="xl:col-span-5 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container-highest/30">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-headline font-bold text-on-surface">Moderation Queue</h3>
-                <span className="bg-primary-container/20 text-primary-fixed-variant border border-primary-container/30 text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider">
-                  12 PENDING
-                </span>
-              </div>
-              <div className="space-y-4">
-                {/* Queue Item */}
-                <div className="p-4 sm:p-5 rounded-xl border border-surface-container-highest/50 bg-surface-container-low/50 hover:bg-surface-container-low transition-colors group">
-                  <div className="flex gap-4 items-start sm:items-center flex-col sm:flex-row">
-                    <img 
-                      alt="Review Item Thumbnail" 
-                      className="w-12 h-12 rounded-lg object-cover shadow-sm group-hover:shadow transition-shadow" 
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7OnSjgElcwy6AkcippqRql1YU7iA91qGGr4bNJ3uIdHHZiA-KVXQGlJ_h9pHkuKsy_fo42JL-FDoZB-Daj6MzOV8Jx4u-O9XZaoU9xaBkLdHr72Szgeevbh6sopuMWn9P8kCoUoWn3-CxTnVhZmRy69wQC-5xCbmKgWZQFzR7rc-UyUdwB3kNd2M7-Gw7yO-pqZe5LOFhUZJdvb9x_IuywV7D9T09HmjRgcOGLpdSy6RTnXupqannbhxVsbIr2aUBa3wRYQF4m2g"
-                    />
-                    <div className="flex-1 w-full sm:w-auto">
-                      <p className="text-sm font-bold text-on-surface">Flagged Comment</p>
-                      <p className="text-xs text-outline mt-1 line-clamp-1 italic">"This content is misleading regarding quantum..."</p>
-                      <div className="flex gap-2 mt-3 w-full sm:w-auto">
-                        <button className="flex-1 sm:flex-none sm:px-4 bg-white border border-surface-container-highest py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-primary/5 active:scale-95 transition-all outline-none">Approve</button>
-                        <button className="flex-1 sm:flex-none sm:px-4 bg-error-container/30 text-error py-1.5 rounded-lg text-xs font-bold hover:bg-error-container/50 border border-error-container/50 active:scale-95 transition-all outline-none">Reject</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* Queue Item */}
-                <div className="p-4 sm:p-5 rounded-xl border border-surface-container-highest/50 bg-surface-container-low/50 hover:bg-surface-container-low transition-colors group">
-                  <div className="flex gap-4 items-start sm:items-center flex-col sm:flex-row">
-                    <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center border border-secondary/20 group-hover:bg-secondary/20 transition-colors">
-                      <span className="material-symbols-outlined text-secondary">auto_stories</span>
-                    </div>
-                    <div className="flex-1 w-full sm:w-auto">
-                      <p className="text-sm font-bold text-on-surface">New Course Submission</p>
-                      <p className="text-xs text-outline mt-1 line-clamp-1 font-medium">Deep Learning Fundamentals by Dr. Aris</p>
-                      <div className="flex gap-2 mt-3 w-full sm:w-auto">
-                        <button className="flex-1 sm:flex-none sm:px-4 bg-white border border-surface-container-highest py-1.5 rounded-lg text-xs font-bold text-primary hover:bg-primary/5 active:scale-95 transition-all outline-none">Approve</button>
-                        <button className="flex-1 sm:flex-none sm:px-4 bg-surface-container py-1.5 rounded-lg text-xs font-bold text-on-surface-variant hover:bg-surface-container-highest border border-transparent active:scale-95 transition-all outline-none">Details</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <Link href="#" className="block text-center mt-6 text-[11px] font-bold text-secondary uppercase tracking-widest hover:underline hover:text-secondary-fixed-variant transition-colors outline-none">
-                View All Flagged Items
-              </Link>
-            </motion.div>
-
-            {/* Recent Registrations Table */}
-            <motion.div variants={itemVariants} className="xl:col-span-7 bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-surface-container-highest/30 overflow-hidden">
-              <h3 className="text-xl font-headline font-bold text-on-surface mb-6">Recent User Registrations</h3>
-              <div className="overflow-x-auto hide-scrollbar">
-                <table className="w-full text-left min-w-[500px]">
-                  <thead className="border-b border-surface-container-highest/50">
-                    <tr>
-                      <th className="pb-4 pt-2 text-[10px] font-bold text-outline-variant uppercase tracking-widest pl-2">User</th>
-                      <th className="pb-4 pt-2 text-[10px] font-bold text-outline-variant uppercase tracking-widest">Role</th>
-                      <th className="pb-4 pt-2 text-[10px] font-bold text-outline-variant uppercase tracking-widest">Join Date</th>
-                      <th className="pb-4 pt-2 text-[10px] font-bold text-outline-variant uppercase tracking-widest">Status</th>
-                      <th className="pb-4 pt-2"></th>
+            </div>
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-outline uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                    <th className="text-left px-6 py-3">Course</th>
+                    <th className="text-left px-6 py-3">Instructor</th>
+                    <th className="text-left px-6 py-3">Price</th>
+                    <th className="text-left px-6 py-3">Status</th>
+                    <th className="text-left px-6 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredCourses.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-on-surface line-clamp-1 max-w-xs">{c.title}</p>
+                        <p className="text-xs text-outline mt-0.5">{c.category} · {c.level}</p>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-on-surface-variant">{c.profiles?.full_name || '—'}</td>
+                      <td className="px-6 py-4 font-mono text-sm font-bold">
+                        {c.price === 0 ? <span className="text-emerald-600">Free</span> : `$${c.price}`}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                          c.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {c.is_published ? 'Published' : 'Draft'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleCoursePublish(c.id, c.is_published)}
+                            disabled={actionLoading === c.id}
+                            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors disabled:opacity-50 font-medium"
+                          >
+                            {c.is_published ? 'Unpublish' : 'Publish'}
+                          </button>
+                          <Link
+                            href={`/courses/${c.id}`}
+                            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors font-medium"
+                          >
+                            View
+                          </Link>
+                          <button
+                            onClick={() => deleteCourse(c.id)}
+                            disabled={actionLoading === c.id}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-50 font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-surface-container-highest/20">
-                    {recentUsers.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-outline">No users found.</td>
-                      </tr>
-                    ) : (
-                      recentUsers.map((user) => (
-                        <tr key={user.id} className="hover:bg-surface-container-low/50 transition-colors">
-                          <td className="py-4 pl-2">
-                            <div className="flex items-center gap-3">
-                              <img alt="User Avatar" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-surface-container-highest object-cover" src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || 'User')}&background=random`}/>
-                              <div>
-                                <p className="text-sm font-bold text-on-surface hover:text-primary transition-colors cursor-pointer">{user.full_name || 'Anonymous'}</p>
-                                <p className="text-[10px] sm:text-[11px] text-outline mt-0.5">{user.email || 'No Email'}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 text-xs font-semibold text-on-surface-variant capitalize">{user.role || 'Student'}</td>
-                          <td className="py-4 text-xs font-mono text-outline">{new Date(user.created_at).toLocaleDateString()}</td>
-                          <td className="py-4">
-                            <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200">Verified</span>
-                          </td>
-                          <td className="py-4 text-right pr-2">
-                            <button className="p-1.5 hover:bg-surface-container text-outline hover:text-on-surface rounded-lg transition-colors outline-none">
-                              <span className="material-symbols-outlined text-[20px]">more_vert</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </main>
+                  ))}
+                </tbody>
+              </table>
+              {filteredCourses.length === 0 && (
+                <div className="text-center py-12 text-outline">No courses found</div>
+              )}
+            </div>
+          </div>
+        )}
 
-      {/* Contextual FAB */}
-      <div className="fixed bottom-6 right-6 lg:bottom-8 lg:right-8 z-40">
-        <button className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-primary-container text-white shadow-[0_4px_20px_rgba(0,104,123,0.4)] flex items-center justify-center hover:scale-105 active:scale-95 transition-all group outline-none overflow-visible">
-          <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
-          <span className="absolute right-full mr-4 bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg shadow-lg text-xs font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Create New Entity
-          </span>
-        </button>
-      </div>
+        {/* ── Reviews ── */}
+        {tab === 'reviews' && (
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface mb-6">Review Moderation</h1>
+            <div className="space-y-3">
+              {reviews.map(r => (
+                <div key={r.id} className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-sm flex gap-4 items-start">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <p className="font-bold text-sm text-on-surface">{r.profiles?.full_name || 'User'}</p>
+                      <div className="flex items-center gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className="material-symbols-outlined text-amber-400 text-xs"
+                            style={{ fontVariationSettings: i < r.rating ? "'FILL' 1" : "'FILL' 0" }}>star</span>
+                        ))}
+                      </div>
+                      <span className="text-xs text-outline font-mono">{new Date(r.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-xs text-outline mb-1">on <span className="font-medium text-on-surface-variant">{r.courses?.title}</span></p>
+                    {r.title && <p className="text-sm font-bold text-on-surface mb-1">{r.title}</p>}
+                    <p className="text-sm text-on-surface-variant">{r.comment}</p>
+                  </div>
+                  <button
+                    onClick={() => deleteReview(r.id)}
+                    disabled={actionLoading === r.id}
+                    className="flex-shrink-0 p-2 text-outline hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    title="Delete review"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                </div>
+              ))}
+              {reviews.length === 0 && (
+                <div className="text-center py-12 text-outline">No reviews yet</div>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
