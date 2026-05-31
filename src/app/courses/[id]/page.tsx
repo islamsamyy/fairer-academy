@@ -40,6 +40,9 @@ export default function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [enrollmentCount, setEnrollmentCount] = useState(0);
   const [avgRating, setAvgRating] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -329,6 +332,104 @@ export default function CourseDetailPage() {
               {/* Tab Content: Reviews */}
               {activeTab === 'reviews' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                  {user && isEnrolled && !showReviewForm && (
+                    <button
+                      onClick={() => setShowReviewForm(true)}
+                      className="w-full bg-surface-container-low text-primary border-2 border-primary/20 p-4 rounded-xl font-bold hover:bg-primary/5 transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined">add_circle</span>
+                      Share Your Review
+                    </button>
+                  )}
+                  {showReviewForm && user && isEnrolled && (
+                    <div className="bg-white p-6 rounded-2xl border border-outline-variant/10 space-y-4">
+                      <h3 className="font-bold text-on-surface text-lg">Write Your Review</h3>
+                      <div>
+                        <label className="text-sm font-bold text-on-surface-variant block mb-2">Rating</label>
+                        <div className="flex items-center gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                              className="outline-none transition-transform hover:scale-110 active:scale-95"
+                            >
+                              <span
+                                className="material-symbols-outlined text-3xl text-amber-500"
+                                style={{ fontVariationSettings: star <= reviewForm.rating ? "'FILL' 1" : "'FILL' 0" }}
+                              >
+                                star
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-on-surface-variant block mb-2">Title</label>
+                        <input
+                          type="text"
+                          placeholder="Summarize your experience..."
+                          value={reviewForm.title}
+                          onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                          className="w-full p-3 border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-bold text-on-surface-variant block mb-2">Review</label>
+                        <textarea
+                          placeholder="Share your detailed feedback..."
+                          value={reviewForm.comment}
+                          onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                          rows={4}
+                          className="w-full p-3 border border-outline-variant/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                        />
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={async () => {
+                            if (!reviewForm.comment.trim()) {
+                              alert('Please write a review');
+                              return;
+                            }
+                            setSubmittingReview(true);
+                            try {
+                              const { error } = await supabase.from('reviews').insert({
+                                user_id: user.id,
+                                course_id: id,
+                                rating: reviewForm.rating,
+                                title: reviewForm.title,
+                                comment: reviewForm.comment,
+                              });
+                              if (error) throw error;
+                              // Refresh reviews
+                              const { data: newReviews } = await supabase
+                                .from('reviews')
+                                .select(`*, profiles (full_name, avatar_url)`)
+                                .eq('course_id', id)
+                                .order('created_at', { ascending: false });
+                              if (newReviews) setReviews(newReviews);
+                              setShowReviewForm(false);
+                              setReviewForm({ rating: 5, title: '', comment: '' });
+                            } catch (err) {
+                              console.error(err);
+                              alert('Failed to submit review');
+                            } finally {
+                              setSubmittingReview(false);
+                            }
+                          }}
+                          disabled={submittingReview}
+                          className="flex-1 bg-primary text-white py-2 rounded-lg font-bold hover:opacity-90 disabled:opacity-50 transition-opacity"
+                        >
+                          {submittingReview ? 'Submitting...' : 'Submit Review'}
+                        </button>
+                        <button
+                          onClick={() => setShowReviewForm(false)}
+                          className="flex-1 bg-surface-container-low text-on-surface py-2 rounded-lg font-bold hover:bg-surface-container transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {reviews.length === 0 ? (
                     <div className="text-center py-10">
                       <p className="text-on-surface-variant">No reviews yet. Be the first to review this course!</p>

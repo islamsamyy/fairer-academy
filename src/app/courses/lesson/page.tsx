@@ -197,7 +197,7 @@ function VideoLessonContent() {
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                   <button
                     onClick={async () => {
-                      if (!enrollment || !currentLesson) return;
+                      if (!enrollment || !currentLesson || !user) return;
                       try {
                         // Mark lesson as completed
                         await supabase.from('lesson_progress').upsert({
@@ -224,7 +224,28 @@ function VideoLessonContent() {
                         await supabase.from('enrollments').update({
                           progress_percentage: progress,
                           last_accessed_at: new Date().toISOString(),
+                          completed_at: progress === 100 ? new Date().toISOString() : null,
                         }).eq('id', enrollment.id);
+
+                        // Auto-generate certificate if course is 100% complete
+                        if (progress === 100) {
+                          // Check if certificate already exists
+                          const { data: existingCert } = await supabase
+                            .from('certificates')
+                            .select('*')
+                            .eq('user_id', user.id)
+                            .eq('course_id', courseId)
+                            .single();
+
+                          if (!existingCert) {
+                            await supabase.from('certificates').insert({
+                              user_id: user.id,
+                              course_id: courseId,
+                              certificate_url: `/certificates/${user.id}/${courseId}`,
+                              issued_at: new Date().toISOString(),
+                            });
+                          }
+                        }
                       } catch (err) {
                         console.error('Failed to mark complete:', err);
                         alert('Failed to mark lesson as complete');

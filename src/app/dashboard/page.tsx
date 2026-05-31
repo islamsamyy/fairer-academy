@@ -96,31 +96,31 @@ function DashboardContent() {
             <span className="material-symbols-outlined">grid_view</span>
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Dashboard</span>
           </a>
-          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/dashboard/orders">
             <span className="material-symbols-outlined">auto_stories</span>
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">{t('dashboard.myCourses')}</span>
           </a>
-          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/certificates">
             <span className="material-symbols-outlined">military_tech</span>
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Achievements</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Certificates</span>
           </a>
-          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/support/community">
             <span className="material-symbols-outlined">group</span>
             <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Community</span>
           </a>
-          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
-            <span className="material-symbols-outlined">event</span>
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Schedule</span>
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/dashboard/notifications">
+            <span className="material-symbols-outlined">notifications</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Notifications</span>
           </a>
         </div>
         <div className="mt-auto flex flex-col gap-2">
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity p-4 mb-2 bg-gradient-to-br from-primary to-secondary rounded-xl text-white text-center">
-            <p className="text-xs font-bold mb-2">Upgrade to Pro</p>
-            <button className="bg-white/20 hover:bg-white/30 text-[10px] px-3 py-1 rounded-full transition-colors">Unlock Power</button>
-          </div>
-          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="#">
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/settings">
+            <span className="material-symbols-outlined">settings</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Settings</span>
+          </a>
+          <a className="flex items-center gap-4 p-3 text-slate-500 hover:bg-slate-200/50 rounded-xl transition-all duration-300 ease-out" href="/support">
             <span className="material-symbols-outlined">help</span>
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Help Center</span>
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-medium whitespace-nowrap">Support</span>
           </a>
         </div>
       </aside>
