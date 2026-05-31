@@ -31,14 +31,16 @@ function VideoLessonContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const courseId = searchParams.get('id');
-  const initialLessonId = searchParams.get('lessonId');
-  
+  const initialLessonId = searchParams.get('lesson');
+
   const [showToast, setShowToast] = useState(true);
   const [loading, setLoading] = useState(true);
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<any[]>([]);
   const [currentLesson, setCurrentLesson] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [enrollment, setEnrollment] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -68,15 +70,38 @@ function VideoLessonContent() {
         .select('*')
         .eq('course_id', courseId)
         .order('order_index', { ascending: true });
-      
+
+      // Fetch Enrollment & Progress
+      const { data: enrollmentData } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('course_id', courseId)
+        .single();
+
+      if (enrollmentData) {
+        setEnrollment(enrollmentData);
+      }
+
       if (lessonsData) {
         setLessons(lessonsData);
         // Set current lesson
+        let selectedLesson = lessonsData[0];
         if (initialLessonId) {
           const found = lessonsData.find(l => l.id === initialLessonId);
-          setCurrentLesson(found || lessonsData[0]);
-        } else {
-          setCurrentLesson(lessonsData[0]);
+          if (found) selectedLesson = found;
+        }
+        setCurrentLesson(selectedLesson);
+
+        // Check if current lesson is completed
+        if (selectedLesson && enrollmentData) {
+          const { data: progressData } = await supabase
+            .from('lesson_progress')
+            .select('*')
+            .eq('enrollment_id', enrollmentData.id)
+            .eq('lesson_id', selectedLesson.id)
+            .single();
+          setIsCompleted(!!progressData?.completed_at);
         }
       }
       setLoading(false);
@@ -137,47 +162,25 @@ function VideoLessonContent() {
               <span className="text-primary font-bold">{currentLesson?.title || 'Starting...'}</span>
             </motion.div>
 
-            {/* Custom Video Player */}
-            <motion.div variants={itemVariants} className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-2xl group mb-10 border border-surface-container-highest/20 cursor-pointer">
-              <img
-                alt="Video Thumbnail"
-                className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                src={course.thumbnail_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuCXXCBH1sUgEouJRefGeLAsQufuNDMA4dA9UamNkiQm_QWN2_dQewQdZlPyR5BgE9b6nh_KnPnyoJEkhRdYoJrntM3GD1uQEG4FrO58ujk34vo1XXEEXAsgYqjnpBOMSdkqYKeAsH8ggJSEpxCuOmBsXQpqk0hq992VYi4KCL2BA70g-wJEHCShfI-POWT_PznqHZElwoVdUvSlViYk_HlKSfrU47n3gkbhAj5Wkh2mB9w79BrkwRrxkDKeZQmmEr3cwUOSDj-xBis"}
-              />
-              
-              {/* Video Controls Overlay */}
-              <div className="absolute inset-0 flex flex-col justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 sm:p-6 z-20">
-                {/* Progress Bar */}
-                <div className="relative w-full h-1.5 bg-white/20 rounded-full mb-4 sm:mb-6 cursor-pointer overflow-hidden group/progress">
-                  <div className="absolute top-0 left-0 h-full w-1/3 bg-primary-container rounded-full shadow-[0_0_12px_rgba(0,217,255,0.6)] group-hover/progress:h-2 transition-all"></div>
-                </div>
-                
-                <div className="flex flex-wrap items-center justify-between text-white gap-4">
-                  <div className="flex items-center gap-4 sm:gap-6">
-                    <button className="material-symbols-outlined text-3xl sm:text-4xl hover:text-primary-container transition-colors outline-none hover:scale-110 active:scale-95">play_arrow</button>
-                    <div className="flex items-center gap-2 group/volume cursor-pointer">
-                      <button className="material-symbols-outlined hover:text-primary-container transition-colors outline-none">volume_up</button>
-                      <div className="w-0 sm:w-16 h-1 sm:group-hover/volume:w-20 transition-all duration-300 bg-white/20 rounded-full overflow-hidden opacity-0 sm:opacity-100">
-                        <div className="h-full w-3/4 bg-white rounded-full"></div>
-                      </div>
-                    </div>
-                    <span className="font-mono text-xs sm:text-sm tracking-widest font-medium">12:45 / 42:00</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 sm:gap-6">
-                    <button className="px-2 py-1 border border-white/30 rounded-lg text-xs font-mono font-bold hover:bg-white/20 active:scale-95 transition-all outline-none">1x</button>
-                    <button className="material-symbols-outlined hover:text-primary-container transition-colors hover:rotate-90 duration-300 outline-none">settings</button>
-                    <button className="material-symbols-outlined hover:text-primary-container transition-colors hover:scale-110 outline-none">fullscreen</button>
+            {/* Video Player */}
+            <motion.div variants={itemVariants} className="relative w-full aspect-video rounded-2xl overflow-hidden bg-slate-900 shadow-2xl mb-10 border border-surface-container-highest/20">
+              {currentLesson?.video_url ? (
+                <video
+                  className="w-full h-full object-contain bg-black"
+                  controls
+                  poster={course.thumbnail_url}
+                >
+                  <source src={currentLesson.video_url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+                  <div className="text-center">
+                    <span className="material-symbols-outlined text-white text-6xl mb-4 block">video_library</span>
+                    <p className="text-white/60 text-sm">No video available for this lesson</p>
                   </div>
                 </div>
-              </div>
-              
-              {/* Center Play Icon (Persistent initially, hidden on play ideally but persistent for UI rep) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg group-hover:bg-primary-container/20 group-hover:border-primary-container/50 transition-colors">
-                  <span className="material-symbols-outlined text-white text-4xl sm:text-5xl ml-1">play_arrow</span>
-                </div>
-              </div>
+              )}
             </motion.div>
 
             {/* Content Details Area */}
@@ -192,9 +195,52 @@ function VideoLessonContent() {
                 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                  <button className="flex-1 sm:flex-none bg-gradient-to-br from-primary to-primary-container text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group hover:-translate-y-0.5">
-                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">check_circle</span>
-                    Mark Complete
+                  <button
+                    onClick={async () => {
+                      if (!enrollment || !currentLesson) return;
+                      try {
+                        // Mark lesson as completed
+                        await supabase.from('lesson_progress').upsert({
+                          enrollment_id: enrollment.id,
+                          lesson_id: currentLesson.id,
+                          completed_at: new Date().toISOString(),
+                        });
+                        setIsCompleted(true);
+
+                        // Update enrollment progress percentage
+                        const { count: totalLessons } = await supabase
+                          .from('lessons')
+                          .select('*', { count: 'exact', head: true })
+                          .eq('course_id', courseId);
+
+                        const { count: completedLessons } = await supabase
+                          .from('lesson_progress')
+                          .select('*', { count: 'exact', head: true })
+                          .eq('enrollment_id', enrollment.id)
+                          .not('completed_at', 'is', null);
+
+                        const progress = totalLessons ? (completedLessons || 0) / totalLessons * 100 : 0;
+
+                        await supabase.from('enrollments').update({
+                          progress_percentage: progress,
+                          last_accessed_at: new Date().toISOString(),
+                        }).eq('id', enrollment.id);
+                      } catch (err) {
+                        console.error('Failed to mark complete:', err);
+                        alert('Failed to mark lesson as complete');
+                      }
+                    }}
+                    disabled={isCompleted}
+                    className={`flex-1 sm:flex-none px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-lg transition-all flex items-center justify-center gap-2 outline-none group hover:-translate-y-0.5 ${
+                      isCompleted
+                        ? 'bg-emerald-500 text-white shadow-emerald-500/20'
+                        : 'bg-gradient-to-br from-primary to-primary-container text-white shadow-primary/20 hover:shadow-primary/40 active:scale-95'
+                    }`}
+                  >
+                    <span className={`material-symbols-outlined group-hover:scale-110 transition-transform ${isCompleted ? '' : ''}`} style={isCompleted ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                      {isCompleted ? 'check_circle' : 'check_circle'}
+                    </span>
+                    {isCompleted ? 'Completed ✓' : 'Mark Complete'}
                   </button>
                   <button className="flex-1 sm:flex-none bg-white border border-surface-container-highest text-on-surface px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold hover:bg-surface-container active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
                     <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">edit_note</span>

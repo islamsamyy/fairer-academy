@@ -32,10 +32,14 @@ export default function CourseDetailPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [course, setCourse] = useState<any>(null);
   const [instructor, setInstructor] = useState<any>(null);
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  const [enrollmentCount, setEnrollmentCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -62,12 +66,41 @@ export default function CourseDetailPage() {
           .single();
         setInstructor(instData);
 
+        // Fetch Lessons
+        const { data: lessonsData } = await supabase
+          .from('lessons')
+          .select('*')
+          .eq('course_id', id)
+          .order('order_index', { ascending: true });
+        if (lessonsData) setLessons(lessonsData);
+
+        // Fetch Reviews
+        const { data: reviewsData } = await supabase
+          .from('reviews')
+          .select(`*, profiles (full_name, avatar_url)`)
+          .eq('course_id', id)
+          .order('created_at', { ascending: false });
+        if (reviewsData) {
+          setReviews(reviewsData);
+          const avgRating = reviewsData.length > 0
+            ? reviewsData.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewsData.length
+            : 0;
+          setAvgRating(Math.round(avgRating * 10) / 10);
+        }
+
+        // Fetch Enrollment Count
+        const { count } = await supabase
+          .from('enrollments')
+          .select('*', { count: 'exact', head: true })
+          .eq('course_id', id);
+        if (count !== null) setEnrollmentCount(count);
+
         // Check Enrollment
         if (user) {
           const { data: enrollData } = await supabase
             .from('enrollments')
             .select('*')
-            .eq('student_id', user.id)
+            .eq('user_id', user.id)
             .eq('course_id', id)
             .single();
           setIsEnrolled(!!enrollData);
@@ -102,7 +135,7 @@ export default function CourseDetailPage() {
       const { error: enrollError } = await supabase
         .from('enrollments')
         .insert({
-          student_id: user.id,
+          user_id: user.id,
           course_id: course.id,
         });
       if (enrollError) throw enrollError;
@@ -125,18 +158,11 @@ export default function CourseDetailPage() {
   if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold">Loading Luminous Data...</div>;
   if (!course) return <div className="min-h-screen bg-surface flex items-center justify-center text-outline">Course Not Found</div>;
 
-  const curriculum = [
-    {
-      title: 'Module 1: Foundations',
-      lessons: [
-        { title: 'Introduction', duration: '10:00', completed: false },
-      ],
-    },
-  ];
-
-  const reviews = [
-    { name: 'Academy Member', rating: 5, comment: 'Exceptional content.', date: 'Recently', avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAltYcGa5n9JfH7TnQoKDFbYEXqpEgMBPxf36-KwNB1Lsmqj_lo4tHLz4qjMJ43l4IQd9Jb85Fftt-kMZ1cI7Aa-T7Ih3NF446DWdBFw3Eiw_OhmDhAzZB9iO3832Z2SR0Nvd_osoGkASsLzZT3TaodUdyFwyveNfpkU0q_GFivZDdZu9i7wLkD-giWljXrOV7LGLN24MaROT_hGmAheA8tLbkScQ_JSQyAZTXrZReMTcMpjjQXAkLXL1CzCLS8lxhCTQJLSv3mkIk' },
-  ];
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="bg-surface font-body text-on-background min-h-screen">
@@ -178,23 +204,23 @@ export default function CourseDetailPage() {
             <motion.div variants={itemVariants} className="flex items-center gap-2">
               <div className="flex items-center gap-1 text-amber-500">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <span key={i} className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  <span key={i} className="material-symbols-outlined text-sm" style={{ fontVariationSettings: i <= Math.floor(avgRating) ? "'FILL' 1" : "'FILL' 0" }}>star</span>
                 ))}
               </div>
-              <span className="text-sm font-bold font-mono text-on-surface">4.9</span>
-              <span className="text-xs text-outline">(1,247 reviews)</span>
+              <span className="text-sm font-bold font-mono text-on-surface">{avgRating || 'N/A'}</span>
+              <span className="text-xs text-outline">({reviews.length} review{reviews.length !== 1 ? 's' : ''})</span>
             </motion.div>
             <motion.div variants={itemVariants} className="flex items-center gap-2 text-on-surface-variant text-sm">
               <span className="material-symbols-outlined text-sm">group</span>
-              <span className="font-medium">8,421 students</span>
+              <span className="font-medium">{enrollmentCount.toLocaleString()} student{enrollmentCount !== 1 ? 's' : ''}</span>
             </motion.div>
             <motion.div variants={itemVariants} className="flex items-center gap-2 text-on-surface-variant text-sm">
               <span className="material-symbols-outlined text-sm">schedule</span>
-              <span className="font-medium">42 hours of content</span>
+              <span className="font-medium">{Math.ceil((lessons.reduce((sum, l) => sum + (l.duration_seconds || 0), 0) / 3600))} hours of content</span>
             </motion.div>
             <motion.div variants={itemVariants} className="flex items-center gap-2 text-on-surface-variant text-sm">
               <span className="material-symbols-outlined text-sm">update</span>
-              <span className="font-medium">Updated Dec 2025</span>
+              <span className="font-medium">Updated {new Date(course.updated_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
             </motion.div>
           </motion.div>
 
@@ -274,50 +300,59 @@ export default function CourseDetailPage() {
               {/* Tab Content: Curriculum */}
               {activeTab === 'curriculum' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  {curriculum.map((module, mi) => (
-                    <div key={mi} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden">
+                  {lessons.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-on-surface-variant">No lessons available yet</p>
+                    </div>
+                  ) : (
+                    <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden">
                       <div className="p-5 bg-surface-container-low/50 flex items-center justify-between">
-                        <h3 className="font-headline font-bold text-on-surface text-sm">{module.title}</h3>
-                        <span className="text-xs text-outline font-mono">{module.lessons.length} lessons</span>
+                        <h3 className="font-headline font-bold text-on-surface text-sm">Course Lessons</h3>
+                        <span className="text-xs text-outline font-mono">{lessons.length} lesson{lessons.length !== 1 ? 's' : ''}</span>
                       </div>
                       <div className="divide-y divide-outline-variant/10">
-                        {module.lessons.map((lesson, li) => (
-                          <div key={li} className="flex items-center gap-4 p-4 hover:bg-surface-container-low/30 transition-colors cursor-pointer group">
-                            <span className={`material-symbols-outlined text-xl ${lesson.completed ? 'text-emerald-500' : 'text-outline'}`} style={lesson.completed ? { fontVariationSettings: "'FILL' 1" } : undefined}>
-                              {lesson.completed ? 'check_circle' : 'play_circle'}
-                            </span>
+                        {lessons.map((lesson) => (
+                          <Link key={lesson.id} href={`/courses/lesson?id=${id}&lesson=${lesson.id}`} className="flex items-center gap-4 p-4 hover:bg-surface-container-low/30 transition-colors group">
+                            <span className="material-symbols-outlined text-xl text-outline">play_circle</span>
                             <div className="flex-1">
                               <p className="text-sm font-medium text-on-surface group-hover:text-primary transition-colors">{lesson.title}</p>
                             </div>
-                            <span className="text-xs text-outline font-mono">{lesson.duration}</span>
-                          </div>
+                            <span className="text-xs text-outline font-mono">{formatDuration(lesson.duration_seconds || 0)}</span>
+                          </Link>
                         ))}
                       </div>
                     </div>
-                  ))}
+                  )}
                 </motion.div>
               )}
 
               {/* Tab Content: Reviews */}
               {activeTab === 'reviews' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                  {reviews.map((review, ri) => (
-                    <div key={ri} className="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
-                      <div className="flex items-center gap-4 mb-4">
-                        <img alt={review.name} className="w-10 h-10 rounded-full object-cover border border-surface-container-highest" src={review.avatar} />
-                        <div className="flex-1">
-                          <p className="font-bold text-on-surface text-sm">{review.name}</p>
-                          <p className="text-xs text-outline">{review.date}</p>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <span key={i} className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-on-surface-variant leading-relaxed">{review.comment}</p>
+                  {reviews.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-on-surface-variant">No reviews yet. Be the first to review this course!</p>
                     </div>
-                  ))}
+                  ) : (
+                    reviews.map((review) => (
+                      <div key={review.id} className="p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant/10">
+                        <div className="flex items-center gap-4 mb-4">
+                          <img alt={review.profiles?.full_name} className="w-10 h-10 rounded-full object-cover border border-surface-container-highest" src={review.profiles?.avatar_url || "https://via.placeholder.com/40"} />
+                          <div className="flex-1">
+                            <p className="font-bold text-on-surface text-sm">{review.profiles?.full_name || 'Anonymous'}</p>
+                            <p className="text-xs text-outline">{new Date(review.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <span key={i} className="material-symbols-outlined text-amber-500 text-sm" style={{ fontVariationSettings: i < (review.rating || 0) ? "'FILL' 1" : "'FILL' 0" }}>star</span>
+                            ))}
+                          </div>
+                        </div>
+                        {review.title && <p className="font-bold text-on-surface text-sm mb-2">{review.title}</p>}
+                        <p className="text-sm text-on-surface-variant leading-relaxed">{review.comment}</p>
+                      </div>
+                    ))
+                  )}
                 </motion.div>
               )}
 

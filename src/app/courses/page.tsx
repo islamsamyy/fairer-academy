@@ -22,6 +22,10 @@ export default function Courses() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(t('courses.categories.all'));
+  const [freeOnly, setFreeOnly] = useState(false);
+  const [maxPrice, setMaxPrice] = useState(5000);
+  const [selectedComplexity, setSelectedComplexity] = useState('');
+  const [enrollmentCounts, setEnrollmentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     async function fetchCourses() {
@@ -36,7 +40,7 @@ export default function Courses() {
           )
         `)
         .eq('is_published', true);
-      
+
       if (selectedCategory !== t('courses.categories.all')) {
         query = query.eq('category', selectedCategory);
       }
@@ -45,8 +49,18 @@ export default function Courses() {
         query = query.ilike('title', `%${searchQuery}%`);
       }
 
+      if (freeOnly) {
+        query = query.eq('price', 0);
+      } else {
+        query = query.lte('price', maxPrice);
+      }
+
+      if (selectedComplexity) {
+        query = query.eq('level', selectedComplexity);
+      }
+
       const { data, error } = await query;
-      
+
       if (!error && data) {
         setCourses(data);
       }
@@ -54,7 +68,7 @@ export default function Courses() {
     }
 
     fetchCourses();
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, freeOnly, maxPrice, selectedComplexity]);
 
   const categories = [
     t('courses.categories.all'),
@@ -103,28 +117,58 @@ export default function Courses() {
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-mono">{t('courses.investmentLabel')}</h3>
               <div className="px-2">
-                <input className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" type="range"/>
+                <input
+                  className="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary"
+                  type="range"
+                  min="0"
+                  max="5000"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(Number(e.target.value))}
+                />
                 <div className="flex justify-between mt-2 text-[10px] font-mono text-slate-400">
                   <span>$0</span>
-                  <span>$5,000+</span>
+                  <span>${maxPrice.toLocaleString()}</span>
                 </div>
               </div>
+              {/* Free Programs Toggle */}
+              <label className="flex items-center gap-3 cursor-pointer group mt-3">
+                <div
+                  onClick={() => setFreeOnly(!freeOnly)}
+                  className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer flex-shrink-0 ${
+                    freeOnly ? 'bg-emerald-500' : 'bg-slate-200'
+                  }`}
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-300 ${
+                    freeOnly ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </div>
+                <div>
+                  <span className={`text-sm font-bold transition-colors ${
+                    freeOnly ? 'text-emerald-600' : 'text-slate-600 group-hover:text-primary'
+                  }`}>Free Programs Only</span>
+                  <p className="text-[10px] text-slate-400 font-mono">Zero cost enrollment</p>
+                </div>
+              </label>
             </div>
 
             {/* Filters: Complexity */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-mono">{t('courses.complexityLabel')}</h3>
               <div className="space-y-3">
-                <button className="w-full text-left px-4 py-3 rounded-xl bg-white shadow-sm border border-outline-variant/5 text-primary text-sm font-medium flex items-center justify-between">
-                  {t('courses.complexityFoundational')}
-                  <span className="material-symbols-outlined text-sm">check_circle</span>
-                </button>
-                <button className="w-full text-left px-4 py-3 rounded-xl hover:bg-white/50 text-slate-500 text-sm font-medium transition-all">
-                  {t('courses.complexityArchitectural')}
-                </button>
-                <button className="w-full text-left px-4 py-3 rounded-xl hover:bg-white/50 text-slate-500 text-sm font-medium transition-all">
-                  {t('courses.complexityTranscendent')}
-                </button>
+                {['beginner', 'intermediate', 'advanced'].map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setSelectedComplexity(selectedComplexity === level ? '' : level)}
+                    className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between transition-all ${
+                      selectedComplexity === level
+                        ? 'bg-white shadow-sm border border-primary text-primary'
+                        : 'hover:bg-white/50 text-slate-500'
+                    }`}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                    {selectedComplexity === level && <span className="material-symbols-outlined text-sm">check_circle</span>}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -196,10 +240,15 @@ export default function Courses() {
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                       src={course.thumbnail_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}
                     />
-                    <div className="absolute top-4 left-4">
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
                       <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold text-primary uppercase tracking-widest">
                         {course.category}
                       </span>
+                      {course.price === 0 && (
+                        <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/30 animate-pulse">
+                          FREE
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="p-8 flex-1 flex flex-col">
@@ -218,12 +267,16 @@ export default function Courses() {
                     <div className="flex items-center justify-between pt-6 border-t border-outline-variant/10">
                       <div>
                         <span className="text-[10px] text-slate-400 uppercase font-mono block mb-1">{t('courses.tuitionLabel')}</span>
-                        <span className="text-xl font-heading font-bold text-on-surface">
+                        <span className={`text-xl font-heading font-bold ${course.price === 0 ? 'text-emerald-600' : 'text-on-surface'}`}>
                           {course.price === 0 ? 'Free' : `$${course.price}`}
                         </span>
                       </div>
-                      <Link href={`/courses/${course.id}`} className="bg-surface-container-low text-primary px-6 py-3 rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all">
-                        {t('courses.viewCourse')}
+                      <Link href={`/courses/${course.id}`} className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                        course.price === 0
+                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white'
+                          : 'bg-surface-container-low text-primary hover:bg-primary hover:text-white'
+                      }`}>
+                        {course.price === 0 ? 'Enroll Free' : t('courses.viewCourse')}
                       </Link>
                     </div>
                   </div>

@@ -59,7 +59,7 @@ function DashboardContent() {
           *,
           courses (*)
         `)
-        .eq('student_id', user.id);
+        .eq('user_id', user.id);
       
       if (enrollmentsData) {
         setEnrollments(enrollmentsData);

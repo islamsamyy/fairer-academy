@@ -51,7 +51,7 @@ export default function CheckoutPage() {
 
       // 2. Create Enrollments
       const enrollments = cart.map(item => ({
-        student_id: user.id,
+        user_id: user.id,
         course_id: item.id
       }));
 
