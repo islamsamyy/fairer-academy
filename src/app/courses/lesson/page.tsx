@@ -218,7 +218,7 @@ function VideoLessonContent() {
                           enrollment_id: enrollment.id,
                           lesson_id: currentLesson.id,
                           completed_at: new Date().toISOString(),
-                        });
+                        }, { onConflict: 'enrollment_id,lesson_id' });
                         setIsCompleted(true);
                         setCompletedLessonIds(prev => new Set([...prev, currentLesson.id]));
 
