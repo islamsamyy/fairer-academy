@@ -431,9 +431,14 @@ export default function InstructorDashboard() {
                               </span>
                             </td>
                             <td className="py-4 pr-2 text-right">
-                              <Link href={`/courses/${course.id || course.course_id}`} className="inline-flex p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none" title="View course">
-                                <span className="material-symbols-outlined">open_in_new</span>
-                              </Link>
+                              <div className="inline-flex items-center gap-1">
+                                <Link href={`/courses/${course.id || course.course_id}/edit`} className="inline-flex p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none" title="Edit course">
+                                  <span className="material-symbols-outlined">edit</span>
+                                </Link>
+                                <Link href={`/courses/${course.id || course.course_id}`} className="inline-flex p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none" title="View course">
+                                  <span className="material-symbols-outlined">open_in_new</span>
+                                </Link>
+                              </div>
                             </td>
                           </tr>
                         ))

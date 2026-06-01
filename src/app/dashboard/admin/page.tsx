@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-type Tab = 'overview' | 'users' | 'courses' | 'reviews';
+type Tab = 'overview' | 'users' | 'courses' | 'reviews' | 'scholarships' | 'broadcast';
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-100 text-red-700',
@@ -33,6 +33,18 @@ export default function AdminDashboardPage() {
 
   // Reviews tab
   const [reviews, setReviews] = useState<any[]>([]);
+
+  // Scholarships tab
+  const [scholarships, setScholarships] = useState<any[]>([]);
+  const [schForm, setSchForm] = useState({ title: '', description: '', amount: '', seats: '1', deadline: '' });
+  const [schSaving, setSchSaving] = useState(false);
+
+  // Broadcast tab
+  const [bcTitle, setBcTitle] = useState('');
+  const [bcBody, setBcBody] = useState('');
+  const [bcTarget, setBcTarget] = useState<'all' | 'student' | 'instructor'>('all');
+  const [bcSending, setBcSending] = useState(false);
+  const [bcMsg, setBcMsg] = useState('');
 
   const loadOverview = useCallback(async () => {
     const [
@@ -81,17 +93,87 @@ export default function AdminDashboardPage() {
     if (data) setReviews(data);
   }, []);
 
+  const loadScholarships = useCallback(async () => {
+    const { data } = await supabase
+      .from('scholarships')
+      .select('*, scholarship_applications (id)')
+      .order('created_at', { ascending: false });
+    if (data) setScholarships(data);
+  }, []);
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
       if (profile?.role !== 'admin') { router.push('/dashboard'); return; }
-      await Promise.all([loadOverview(), loadUsers(), loadCourses(), loadReviews()]);
+      await Promise.all([loadOverview(), loadUsers(), loadCourses(), loadReviews(), loadScholarships()]);
       setLoading(false);
     }
     init();
-  }, [router, loadOverview, loadUsers, loadCourses, loadReviews]);
+  }, [router, loadOverview, loadUsers, loadCourses, loadReviews, loadScholarships]);
+
+  const createScholarship = async () => {
+    if (!schForm.title.trim()) return;
+    setSchSaving(true);
+    const { error } = await supabase.from('scholarships').insert({
+      title: schForm.title,
+      description: schForm.description,
+      amount: schForm.amount ? parseFloat(schForm.amount) : null,
+      seats: parseInt(schForm.seats) || 1,
+      deadline: schForm.deadline || null,
+      is_active: true,
+    });
+    if (!error) {
+      setSchForm({ title: '', description: '', amount: '', seats: '1', deadline: '' });
+      await loadScholarships();
+    } else {
+      alert(error.message);
+    }
+    setSchSaving(false);
+  };
+
+  const toggleScholarship = async (id: string, active: boolean) => {
+    setActionLoading(id);
+    await supabase.from('scholarships').update({ is_active: !active }).eq('id', id);
+    setScholarships(s => s.map(x => x.id === id ? { ...x, is_active: !active } : x));
+    setActionLoading(null);
+  };
+
+  const deleteScholarship = async (id: string) => {
+    if (!confirm('Delete this scholarship?')) return;
+    setActionLoading(id);
+    await supabase.from('scholarships').delete().eq('id', id);
+    setScholarships(s => s.filter(x => x.id !== id));
+    setActionLoading(null);
+  };
+
+  const sendBroadcast = async () => {
+    if (!bcTitle.trim()) { setBcMsg('Title is required'); return; }
+    setBcSending(true);
+    setBcMsg('');
+    try {
+      let q = supabase.from('profiles').select('id');
+      if (bcTarget !== 'all') q = q.eq('role', bcTarget);
+      const { data: targets, error: tErr } = await q;
+      if (tErr) throw tErr;
+      if (!targets || targets.length === 0) { setBcMsg('No recipients found'); setBcSending(false); return; }
+      const rows = targets.map((t: any) => ({
+        user_id: t.id, title: bcTitle, body: bcBody, type: 'info',
+      }));
+      // insert in chunks of 500
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await supabase.from('notifications').insert(rows.slice(i, i + 500));
+        if (error) throw error;
+      }
+      setBcMsg(`Sent to ${targets.length} user${targets.length !== 1 ? 's' : ''} ✓`);
+      setBcTitle(''); setBcBody('');
+    } catch (err: any) {
+      setBcMsg('Error: ' + err.message);
+    } finally {
+      setBcSending(false);
+    }
+  };
 
   const changeUserRole = async (userId: string, newRole: string) => {
     setActionLoading(userId);
@@ -144,6 +226,8 @@ export default function AdminDashboardPage() {
     { id: 'users', icon: 'group', label: `Users (${stats.users})` },
     { id: 'courses', icon: 'library_books', label: `Courses (${stats.courses})` },
     { id: 'reviews', icon: 'reviews', label: `Reviews (${stats.reviews})` },
+    { id: 'scholarships', icon: 'school', label: `Scholarships (${scholarships.length})` },
+    { id: 'broadcast', icon: 'campaign', label: 'Broadcast' },
   ];
 
   return (
@@ -307,9 +391,9 @@ export default function AdminDashboardPage() {
         {/* ── Courses ── */}
         {tab === 'courses' && (
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
               <h1 className="text-2xl font-bold text-on-surface">Course Management</h1>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 {(['all', 'published', 'draft'] as const).map(f => (
                   <button
                     key={f}
@@ -321,6 +405,9 @@ export default function AdminDashboardPage() {
                     {f}
                   </button>
                 ))}
+                <Link href="/courses/create" className="ml-2 px-4 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:opacity-90 transition-opacity flex items-center gap-1">
+                  <span className="material-symbols-outlined text-sm">add</span> New Course
+                </Link>
               </div>
             </div>
             <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
@@ -361,6 +448,12 @@ export default function AdminDashboardPage() {
                           >
                             {c.is_published ? 'Unpublish' : 'Publish'}
                           </button>
+                          <Link
+                            href={`/courses/${c.id}/edit`}
+                            className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium"
+                          >
+                            Edit
+                          </Link>
                           <Link
                             href={`/courses/${c.id}`}
                             className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors font-medium"
@@ -422,6 +515,103 @@ export default function AdminDashboardPage() {
               {reviews.length === 0 && (
                 <div className="text-center py-12 text-outline">No reviews yet</div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Scholarships ── */}
+        {tab === 'scholarships' && (
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface mb-6">Scholarships</h1>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Create form */}
+              <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 h-fit">
+                <h2 className="font-bold text-on-surface mb-4">New Scholarship</h2>
+                <div className="space-y-3">
+                  <input value={schForm.title} onChange={e => setSchForm({ ...schForm, title: e.target.value })} placeholder="Title" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                  <textarea value={schForm.description} onChange={e => setSchForm({ ...schForm, description: e.target.value })} placeholder="Description" rows={3} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input value={schForm.amount} onChange={e => setSchForm({ ...schForm, amount: e.target.value })} type="number" placeholder="Amount ($)" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                    <input value={schForm.seats} onChange={e => setSchForm({ ...schForm, seats: e.target.value })} type="number" min="1" placeholder="Seats" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-outline font-bold uppercase">Deadline</label>
+                    <input value={schForm.deadline} onChange={e => setSchForm({ ...schForm, deadline: e.target.value })} type="date" className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 mt-1" />
+                  </div>
+                  <button onClick={createScholarship} disabled={schSaving || !schForm.title.trim()} className="w-full py-2.5 rounded-lg bg-primary text-white text-sm font-bold hover:opacity-90 disabled:opacity-50">
+                    {schSaving ? 'Creating…' : 'Create Scholarship'}
+                  </button>
+                </div>
+              </div>
+              {/* List */}
+              <div className="lg:col-span-2 space-y-3">
+                {scholarships.length === 0 ? (
+                  <div className="text-center py-12 text-outline bg-white rounded-2xl border border-slate-200/60">No scholarships yet</div>
+                ) : scholarships.map(s => (
+                  <div key={s.id} className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-bold text-on-surface">{s.title}</h3>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                            {s.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-on-surface-variant mb-2">{s.description}</p>
+                        <div className="flex flex-wrap gap-4 text-xs text-outline font-mono">
+                          {s.amount != null && <span>${Number(s.amount).toLocaleString()}</span>}
+                          <span>{s.seats} seat{s.seats !== 1 ? 's' : ''}</span>
+                          {s.deadline && <span>Due {new Date(s.deadline).toLocaleDateString()}</span>}
+                          <span>{s.scholarship_applications?.length || 0} applicant{(s.scholarship_applications?.length || 0) !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <button onClick={() => toggleScholarship(s.id, s.is_active)} disabled={actionLoading === s.id} className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium disabled:opacity-50">
+                          {s.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button onClick={() => deleteScholarship(s.id)} disabled={actionLoading === s.id} className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium disabled:opacity-50">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Broadcast ── */}
+        {tab === 'broadcast' && (
+          <div className="max-w-2xl">
+            <h1 className="text-2xl font-bold text-on-surface mb-2">Broadcast Notification</h1>
+            <p className="text-sm text-outline mb-6">Send an announcement to users. It appears in their in-app notifications.</p>
+            <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-outline uppercase tracking-wider">Recipients</label>
+                <div className="flex gap-2 mt-2">
+                  {([['all', 'All users'], ['student', 'Students'], ['instructor', 'Instructors']] as const).map(([v, l]) => (
+                    <button key={v} onClick={() => setBcTarget(v)} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${bcTarget === v ? 'bg-primary text-white' : 'bg-slate-50 border border-slate-200 text-outline hover:text-on-surface'}`}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-outline uppercase tracking-wider">Title</label>
+                <input value={bcTitle} onChange={e => setBcTitle(e.target.value)} placeholder="e.g. New courses just dropped!" className="w-full mt-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-outline uppercase tracking-wider">Message</label>
+                <textarea value={bcBody} onChange={e => setBcBody(e.target.value)} rows={4} placeholder="Write your announcement…" className="w-full mt-1 px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20" />
+              </div>
+              <div className="flex items-center justify-between">
+                {bcMsg ? <span className={`text-sm font-bold ${bcMsg.startsWith('Error') ? 'text-error' : 'text-emerald-600'}`}>{bcMsg}</span> : <span />}
+                <button onClick={sendBroadcast} disabled={bcSending || !bcTitle.trim()} className="px-6 py-3 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-sm">send</span>
+                  {bcSending ? 'Sending…' : 'Send Broadcast'}
+                </button>
+              </div>
             </div>
           </div>
         )}
