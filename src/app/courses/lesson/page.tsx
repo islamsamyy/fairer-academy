@@ -203,7 +203,7 @@ function VideoLessonContent() {
                 <div>
                   <h2 className="text-3xl sm:text-4xl font-headline font-bold tracking-tight text-slate-900 mb-4">{currentLesson?.title}</h2>
                   <div className="prose prose-slate max-w-none text-on-surface-variant leading-relaxed text-sm sm:text-base">
-                    <p className="mb-4 font-medium">{currentLesson?.content || 'No content available for this lesson.'}</p>
+                    <p className="mb-4 font-medium">{currentLesson?.description || currentLesson?.transcript || 'No description available for this lesson.'}</p>
                   </div>
                 </div>
                 
