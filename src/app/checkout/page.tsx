@@ -36,32 +36,45 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      // 1. Create Order
-      const { data: orderData, error: orderError } = await supabase
+      // 1. Create one order row per course (orders table is per-course)
+      const orderRows = cart.map(item => ({
+        user_id: user.id,
+        course_id: item.id,
+        amount: item.price,
+        currency: 'USD',
+        status: 'completed' as const,
+      }));
+
+      const { error: orderError } = await supabase
         .from('orders')
-        .insert([{
-          user_id: user.id,
-          total_amount: subtotal,
-          status: 'completed'
-        }])
-        .select()
-        .single();
+        .insert(orderRows);
 
       if (orderError) throw orderError;
 
-      // 2. Create Enrollments
+      // 2. Create Enrollments (ignore duplicates if already enrolled)
       const enrollments = cart.map(item => ({
         user_id: user.id,
-        course_id: item.id
+        course_id: item.id,
       }));
 
       const { error: enrollError } = await supabase
         .from('enrollments')
-        .insert(enrollments);
+        .upsert(enrollments, { onConflict: 'user_id,course_id', ignoreDuplicates: true });
 
       if (enrollError) throw enrollError;
 
-      // 3. Clear Cart & Success
+      // 3. Notify the user
+      await supabase.from('notifications').insert(
+        cart.map(item => ({
+          user_id: user.id,
+          title: 'Enrollment confirmed',
+          body: `You're now enrolled in "${item.title}". Start learning anytime.`,
+          type: 'course',
+          link: `/courses/${item.id}`,
+        }))
+      );
+
+      // 4. Clear Cart & Success
       clearCart();
       router.push('/dashboard?checkout=success');
     } catch (err: any) {

@@ -32,6 +32,8 @@ export default function InstructorDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
+  const [avgCompletion, setAvgCompletion] = useState(0);
+  const [courseFilter, setCourseFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,15 +58,32 @@ export default function InstructorDashboard() {
         .from('course_stats')
         .select('*')
         .eq('instructor_id', user.id);
-      
+
       if (coursesData) {
         setCourses(coursesData);
+
+        // Compute real average completion across enrollments in these courses
+        const courseIds = coursesData.map((c: any) => c.id || c.course_id).filter(Boolean);
+        if (courseIds.length > 0) {
+          const { data: enrolls } = await supabase
+            .from('enrollments')
+            .select('progress_percentage')
+            .in('course_id', courseIds);
+          if (enrolls && enrolls.length > 0) {
+            const avg = enrolls.reduce((s, e) => s + Number(e.progress_percentage || 0), 0) / enrolls.length;
+            setAvgCompletion(Math.round(avg * 10) / 10);
+          }
+        }
       }
       setLoading(false);
     }
 
     getInitialData();
   }, [router]);
+
+  const filteredCourses = courses.filter(c =>
+    courseFilter === 'all' ? true : courseFilter === 'published' ? c.is_published : !c.is_published
+  );
 
   return (
     <div className="min-h-screen bg-surface font-body text-on-background selection:bg-primary-container selection:text-on-primary-container">
@@ -89,12 +108,10 @@ export default function InstructorDashboard() {
             <Link href="/settings" className="p-2 text-slate-500 hover:bg-surface-container rounded-lg transition-all active:scale-90 outline-none">
               <span className="material-symbols-outlined">settings</span>
             </Link>
-            <Link href="/profile" className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-container outline-none hover:scale-105 transition-transform cursor-pointer">
-              <img
-                className="w-full h-full object-cover"
-                alt="Instructor profile avatar"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtotWlBghiIYYPch-EN5wJkMtV6YXvmTRiRwF-bUSymUkU_6myP8WsvbsetYJnkLEZQUPnmQ8r2zE5lF7jUR4r0GFCY4sfln3n3_F2nssZQoX0sjf9bFU054DFP0pJxbzgG7cz4nPV5W92KLhSi8U5jcyYmhSWbIWK3NPWvbiSx3RbjmHB6hlbzSpHMCheo3oQGCfpWqr-zl9rUJmk4aE5QjJ3ZOIIP3tL1U5uz2lniSMS1o9AXLjE91uF_LPlRebegZ6zuTUwGpY"
-              />
+            <Link href="/profile" className="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-container outline-none hover:scale-105 transition-transform cursor-pointer bg-primary/10 flex items-center justify-center text-primary font-bold">
+              {profile?.avatar_url
+                ? <img className="w-full h-full object-cover" alt="Instructor profile avatar" src={profile.avatar_url} />
+                : (profile?.full_name || 'I').charAt(0).toUpperCase()}
             </Link>
           </div>
         </div>
@@ -306,15 +323,15 @@ export default function InstructorDashboard() {
                   <div className="p-6 bg-gradient-to-br from-secondary to-secondary-container rounded-3xl text-white shadow-xl shadow-secondary/20 relative overflow-hidden group">
                     <div className="absolute inset-0 bg-secondary-container opacity-0 group-hover:opacity-50 transition-opacity"></div>
                     <div className="relative z-10">
-                      <h3 className="text-lg font-bold mb-2 font-headline">Completion Rate</h3>
+                      <h3 className="text-lg font-bold mb-2 font-headline">Avg Completion Rate</h3>
                       <div className="flex items-baseline gap-2 mb-4">
-                        <span className="text-4xl font-bold font-headline tracking-tighter">76.4%</span>
-                        <span className="text-xs opacity-80 font-medium">+2.1% from last month</span>
+                        <span className="text-4xl font-bold font-headline tracking-tighter">{avgCompletion}%</span>
+                        <span className="text-xs opacity-80 font-medium">across all enrollments</span>
                       </div>
                       <div className="w-full bg-white/20 h-2 rounded-full mb-6 overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: '76.4%' }} transition={{ duration: 1.5, ease: 'easeOut' }} className="bg-white h-full rounded-full"></motion.div>
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${avgCompletion}%` }} transition={{ duration: 1.5, ease: 'easeOut' }} className="bg-white h-full rounded-full"></motion.div>
                       </div>
-                      <p className="text-sm opacity-90 leading-relaxed italic border-l-2 border-white/30 pl-3">"Exceeding industry benchmark by 18%."</p>
+                      <p className="text-sm opacity-90 leading-relaxed italic border-l-2 border-white/30 pl-3">Average progress of students enrolled in your courses.</p>
                     </div>
                     <div className="absolute top-0 right-0 p-4 opacity-20 transform translate-x-4 -translate-y-4 group-hover:rotate-12 group-hover:scale-110 transition-all duration-500">
                       <span className="material-symbols-outlined text-9xl">auto_awesome</span>
@@ -343,9 +360,15 @@ export default function InstructorDashboard() {
                     <p className="text-sm text-outline mt-1">Detailed overview of your active curriculum</p>
                   </div>
                   <div className="flex items-center gap-1 border border-surface-container-highest bg-surface-container-low p-1 rounded-xl w-full sm:w-auto overflow-x-auto hide-scrollbar">
-                    <button className="px-4 py-2 text-xs font-bold bg-white shadow-sm rounded-lg text-primary whitespace-nowrap outline-none">All Courses</button>
-                    <button className="px-4 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors whitespace-nowrap outline-none">Published</button>
-                    <button className="px-4 py-2 text-xs font-bold text-outline hover:text-on-surface transition-colors whitespace-nowrap outline-none">Drafts</button>
+                    {([['all', 'All Courses'], ['published', 'Published'], ['draft', 'Drafts']] as const).map(([key, label]) => (
+                      <button
+                        key={key}
+                        onClick={() => setCourseFilter(key)}
+                        className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap outline-none transition-colors ${courseFilter === key ? 'bg-white shadow-sm text-primary' : 'text-outline hover:text-on-surface'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
                 </div>
                 
@@ -366,16 +389,16 @@ export default function InstructorDashboard() {
                         <tr>
                           <td colSpan={6} className="py-8 text-center text-outline">Loading your portfolio...</td>
                         </tr>
-                      ) : courses.length === 0 ? (
+                      ) : filteredCourses.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center">
-                            <p className="text-on-surface-variant mb-4">You haven't created any courses yet.</p>
+                            <p className="text-on-surface-variant mb-4">{courses.length === 0 ? "You haven't created any courses yet." : 'No courses match this filter.'}</p>
                             <Link href="/courses/create" className="text-primary font-bold hover:underline">Create your first course</Link>
                           </td>
                         </tr>
                       ) : (
-                        courses.map((course) => (
-                          <tr key={course.id} className="group hover:bg-surface-container-low/50 transition-colors">
+                        filteredCourses.map((course) => (
+                          <tr key={course.id || course.course_id} className="group hover:bg-surface-container-low/50 transition-colors">
                             <td className="py-4 pl-2">
                               <div className="flex items-center gap-4">
                                 <div className="h-12 w-12 rounded-xl bg-primary-container/20 flex items-center justify-center text-primary group-hover:scale-105 transition-transform overflow-hidden">
@@ -408,9 +431,9 @@ export default function InstructorDashboard() {
                               </span>
                             </td>
                             <td className="py-4 pr-2 text-right">
-                              <button className="p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none">
-                                <span className="material-symbols-outlined">more_horiz</span>
-                              </button>
+                              <Link href={`/courses/${course.id || course.course_id}`} className="inline-flex p-2 text-outline-variant hover:text-primary hover:bg-primary-container/20 rounded-lg transition-colors outline-none" title="View course">
+                                <span className="material-symbols-outlined">open_in_new</span>
+                              </Link>
                             </td>
                           </tr>
                         ))
@@ -419,10 +442,10 @@ export default function InstructorDashboard() {
                   </table>
                 </div>
                 <div className="mt-8 flex justify-center">
-                  <button className="text-sm font-bold text-primary hover:text-primary/80 hover:underline transition-all outline-none flex items-center gap-1">
-                    View All 14 Courses
-                    <span className="material-symbols-outlined text-[16px]">arrow_outward</span>
-                  </button>
+                  <Link href="/courses/create" className="text-sm font-bold text-primary hover:text-primary/80 hover:underline transition-all outline-none flex items-center gap-1">
+                    Create another course
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                  </Link>
                 </div>
               </motion.div>
             </motion.div>
