@@ -34,6 +34,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const handleOAuth = async (provider: 'google' | 'github') => {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError(error.message);
+  };
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -202,12 +211,12 @@ export default function LoginPage() {
                 >
                   {t('login.passwordLabel')}
                 </label>
-                <a
+                <Link
                   className="text-xs font-mono font-bold text-secondary hover:text-secondary-container transition-colors uppercase tracking-widest"
-                  href="#"
+                  href="/forgot-password"
                 >
                   {t('login.forgotPassword')}
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
@@ -253,7 +262,7 @@ export default function LoginPage() {
 
           {/* Social Logins */}
           <motion.div variants={itemVariants} className="grid grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-3 py-3.5 px-4 bg-surface-container-lowest ghost-border border-outline-variant/30 rounded-xl hover:bg-surface-container transition-all duration-300 active:scale-95 outline-none hover:shadow-sm">
+            <button type="button" onClick={() => handleOAuth('google')} className="flex items-center justify-center gap-3 py-3.5 px-4 bg-surface-container-lowest ghost-border border-outline-variant/30 rounded-xl hover:bg-surface-container transition-all duration-300 active:scale-95 outline-none hover:shadow-sm">
               <img
                 alt="Google colorful logo icon"
                 className="w-5 h-5"
@@ -261,7 +270,7 @@ export default function LoginPage() {
               />
               <span className="text-sm font-semibold text-on-surface">Google</span>
             </button>
-            <button className="flex items-center justify-center gap-3 py-3.5 px-4 bg-surface-container-lowest ghost-border border-outline-variant/30 rounded-xl hover:bg-surface-container transition-all duration-300 active:scale-95 outline-none hover:shadow-sm">
+            <button type="button" onClick={() => handleOAuth('github')} className="flex items-center justify-center gap-3 py-3.5 px-4 bg-surface-container-lowest ghost-border border-outline-variant/30 rounded-xl hover:bg-surface-container transition-all duration-300 active:scale-95 outline-none hover:shadow-sm">
               <span
                 className="material-symbols-outlined text-on-surface"
                 style={{ fontVariationSettings: "'FILL' 1" }}

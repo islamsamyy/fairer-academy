@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { User } from '@supabase/supabase-js';
+import LessonQuiz from '@/components/LessonQuiz';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -288,6 +289,9 @@ function VideoLessonContent() {
                     Share
                   </button>
                 </div>
+
+                {/* Lesson Quiz (renders only if the lesson has a quiz) */}
+                {currentLesson?.id && <LessonQuiz lessonId={currentLesson.id} userId={user?.id ?? null} />}
               </div>
 
               {/* Instructor Card */}

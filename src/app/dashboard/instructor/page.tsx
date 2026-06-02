@@ -34,6 +34,7 @@ export default function InstructorDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
   const [avgCompletion, setAvgCompletion] = useState(0);
   const [courseFilter, setCourseFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [monthly, setMonthly] = useState<{ label: string; revenue: number; enrollments: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +74,45 @@ export default function InstructorDashboard() {
             const avg = enrolls.reduce((s, e) => s + Number(e.progress_percentage || 0), 0) / enrolls.length;
             setAvgCompletion(Math.round(avg * 10) / 10);
           }
+
+          // Build last-6-months revenue + enrollment series from real data
+          const since = new Date();
+          since.setMonth(since.getMonth() - 5);
+          since.setDate(1);
+          since.setHours(0, 0, 0, 0);
+
+          const [{ data: orderRows }, { data: enrollRows }] = await Promise.all([
+            supabase.from('orders').select('amount, created_at, status')
+              .in('course_id', courseIds).gte('created_at', since.toISOString()),
+            supabase.from('enrollments').select('enrolled_at')
+              .in('course_id', courseIds).gte('enrolled_at', since.toISOString()),
+          ]);
+
+          const buckets: { label: string; key: string; revenue: number; enrollments: number }[] = [];
+          for (let i = 0; i < 6; i++) {
+            const d = new Date(since);
+            d.setMonth(since.getMonth() + i);
+            buckets.push({
+              label: d.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+              key: `${d.getFullYear()}-${d.getMonth()}`,
+              revenue: 0,
+              enrollments: 0,
+            });
+          }
+          const idxFor = (iso: string) => {
+            const d = new Date(iso);
+            return buckets.findIndex(b => b.key === `${d.getFullYear()}-${d.getMonth()}`);
+          };
+          (orderRows || []).forEach((o: any) => {
+            if (o.status === 'refunded' || o.status === 'failed') return;
+            const i = idxFor(o.created_at);
+            if (i >= 0) buckets[i].revenue += Number(o.amount || 0);
+          });
+          (enrollRows || []).forEach((e: any) => {
+            const i = idxFor(e.enrolled_at);
+            if (i >= 0) buckets[i].enrollments += 1;
+          });
+          setMonthly(buckets.map(({ label, revenue, enrollments }) => ({ label, revenue, enrollments })));
         }
       }
       setLoading(false);
@@ -271,52 +311,52 @@ export default function InstructorDashboard() {
                       <h3 className="text-xl font-bold text-on-surface font-headline">Revenue Tracking</h3>
                       <p className="text-sm text-outline">Monthly earnings over the last 6 months</p>
                     </div>
-                    <div className="flex gap-2">
-                      <button className="px-4 py-2 text-xs font-bold rounded-lg bg-surface-container text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all outline-none">
-                        Download CSV
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => {
+                        const rows = [['Month', 'Revenue', 'Enrollments'], ...monthly.map(m => [m.label, m.revenue, m.enrollments])];
+                        const csv = rows.map(r => r.join(',')).join('\n');
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = 'revenue.csv';
+                        a.click();
+                      }}
+                      className="px-4 py-2 text-xs font-bold rounded-lg bg-surface-container text-on-surface-variant hover:bg-primary/10 hover:text-primary transition-all outline-none"
+                    >
+                      Download CSV
+                    </button>
                   </div>
-                  
-                  {/* Simplified Bar Chart Representation */}
-                  <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 px-1 sm:px-2 pt-4 border-b border-outline-variant/20 pb-4">
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '35%' }} transition={{ duration: 1, ease: 'easeOut' }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-outline">JUL</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '50%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.1 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-outline">AUG</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '70%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-outline">SEP</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '60%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-outline">OCT</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '90%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.4 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary h-full rounded-t-lg shadow-lg shadow-primary/30"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-primary font-bold">NOV</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-3 w-full h-full justify-end">
-                      <motion.div initial={{ height: 0 }} animate={{ height: '65%' }} transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }} className="w-full bg-surface-container rounded-t-lg group relative cursor-pointer">
-                        <div className="absolute inset-x-0 bottom-0 bg-primary-container/50 h-full rounded-t-lg transition-all group-hover:bg-primary/40"></div>
-                      </motion.div>
-                      <span className="text-xs font-mono text-outline">DEC</span>
-                    </div>
-                  </div>
+
+                  {/* Real Bar Chart from order/enrollment data */}
+                  {(() => {
+                    const maxRev = Math.max(1, ...monthly.map(m => m.revenue));
+                    const peakIdx = monthly.reduce((best, m, i, arr) => m.revenue > arr[best].revenue ? i : best, 0);
+                    return (
+                      <div className="h-64 flex items-end justify-between gap-2 sm:gap-4 px-1 sm:px-2 pt-4 border-b border-outline-variant/20 pb-4">
+                        {monthly.length === 0 ? (
+                          <div className="w-full h-full flex items-center justify-center text-sm text-outline">No revenue data yet</div>
+                        ) : monthly.map((m, i) => {
+                          const pct = Math.round((m.revenue / maxRev) * 100);
+                          const isPeak = i === peakIdx && m.revenue > 0;
+                          return (
+                            <div key={m.label + i} className="flex flex-col items-center gap-3 w-full h-full justify-end">
+                              <div className="relative w-full group" style={{ height: `${Math.max(pct, 2)}%` }}>
+                                <motion.div
+                                  initial={{ height: 0 }} animate={{ height: '100%' }}
+                                  transition={{ duration: 0.8, ease: 'easeOut', delay: i * 0.08 }}
+                                  className={`absolute inset-x-0 bottom-0 rounded-t-lg ${isPeak ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-primary-container/50 group-hover:bg-primary/40'} transition-colors`}
+                                />
+                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-on-surface text-white text-[10px] font-bold px-2 py-1 rounded whitespace-nowrap z-10">
+                                  ${m.revenue.toLocaleString()} · {m.enrollments} enr.
+                                </div>
+                              </div>
+                              <span className={`text-xs font-mono ${isPeak ? 'text-primary font-bold' : 'text-outline'}`}>{m.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
                 
                 <div className="flex flex-col gap-6">

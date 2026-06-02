@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { sendEmail, basicEmail } from '@/lib/email';
 
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
@@ -74,7 +75,22 @@ export default function CheckoutPage() {
         }))
       );
 
-      // 4. Clear Cart & Success
+      // 4. Email confirmation (best-effort; no-op if email isn't configured)
+      if (user.email) {
+        const list = cart.map(i => `<li>${i.title}</li>`).join('');
+        sendEmail(
+          user.email,
+          'Your Fairer Academy enrollment is confirmed',
+          basicEmail(
+            'Enrollment confirmed 🎉',
+            `Thanks for your purchase! You now have lifetime access to:<ul>${list}</ul>`,
+            `${window.location.origin}/dashboard`,
+            'Go to my courses'
+          )
+        );
+      }
+
+      // 5. Clear Cart & Success
       clearCart();
       router.push('/dashboard?checkout=success');
     } catch (err: any) {

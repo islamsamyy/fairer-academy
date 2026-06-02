@@ -305,6 +305,13 @@ export default function CourseEditPage() {
                     <input type="file" accept="video/*" className="hidden" onChange={e => e.target.files?.[0] && uploadVideo(l.localId, e.target.files[0])} />
                   </label>
                   <input type="number" min="0" value={l.duration_seconds} onChange={e => patchLesson(l.localId, { duration_seconds: Number(e.target.value) })} placeholder="Duration (sec)" className="w-32 px-3 py-1.5 text-xs border border-outline-variant/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20" title="Duration in seconds" />
+                  {l.id ? (
+                    <Link href={`/courses/${id}/quiz?lesson=${l.id}`} className="inline-flex items-center gap-1 text-xs font-bold text-secondary hover:underline">
+                      <span className="material-symbols-outlined text-[14px]">quiz</span> Manage quiz
+                    </Link>
+                  ) : (
+                    <span className="text-xs text-outline italic">Save course to add a quiz</span>
+                  )}
                 </div>
                 {(l.video_url || l.videoPreview) && (
                   <video src={l.videoPreview || l.video_url} controls className="w-full max-h-56 rounded-xl bg-black" />
