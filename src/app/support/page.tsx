@@ -16,12 +16,12 @@ const itemVariants: Variants = {
 };
 
 const categories = [
-  { icon: 'school', title: 'Courses & Enrollment', desc: 'Course access, certificates, and progress', count: 24 },
-  { icon: 'payments', title: 'Billing & Payments', desc: 'Refunds, invoices, and subscriptions', count: 18 },
-  { icon: 'settings', title: 'Account & Security', desc: 'Login issues, privacy, and settings', count: 15 },
-  { icon: 'devices', title: 'Technical Support', desc: 'App issues, downloads, and performance', count: 12 },
-  { icon: 'group', title: 'Community & Forum', desc: 'Guidelines, moderation, and conduct', count: 8 },
-  { icon: 'workspace_premium', title: 'Pro Membership', desc: 'Features, upgrades, and benefits', count: 10 },
+  { icon: 'school', title: 'Courses & Enrollment', desc: 'Course access, certificates, and progress', href: '/courses' },
+  { icon: 'payments', title: 'Billing & Payments', desc: 'Refunds, invoices, and subscriptions', href: '/dashboard/orders' },
+  { icon: 'settings', title: 'Account & Security', desc: 'Login issues, privacy, and settings', href: '/settings' },
+  { icon: 'devices', title: 'Technical Support', desc: 'App issues, downloads, and performance', href: '/support/contact' },
+  { icon: 'group', title: 'Community & Forum', desc: 'Guidelines, moderation, and conduct', href: '/support/community' },
+  { icon: 'workspace_premium', title: 'Certificates', desc: 'Earn and download your certificates', href: '/certificates' },
 ];
 
 const faqs = [
@@ -34,6 +34,15 @@ const faqs = [
 export default function SupportPage() {
   const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [query, setQuery] = useState('');
+
+  const q = query.trim().toLowerCase();
+  const filteredFaqs = q
+    ? faqs.filter(f => f.q.toLowerCase().includes(q) || f.a.toLowerCase().includes(q))
+    : faqs;
+  const filteredCategories = q
+    ? categories.filter(c => c.title.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q))
+    : categories;
 
   return (
     <div className="bg-surface font-body text-on-background min-h-screen">
@@ -47,7 +56,18 @@ export default function SupportPage() {
             <p className="text-on-surface-variant text-lg mb-8">{t('support.searchPlaceholder')}</p>
             <div className="flex items-center bg-white rounded-2xl shadow-lg border border-outline-variant/10 px-5 py-3 max-w-lg mx-auto">
               <span className="material-symbols-outlined text-outline mr-3">search</span>
-              <input className="bg-transparent border-none text-sm w-full outline-none placeholder:text-outline" placeholder={t('support.searchPlaceholder')} type="text" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="bg-transparent border-none text-sm w-full outline-none placeholder:text-outline"
+                placeholder={t('support.searchPlaceholder')}
+                type="text"
+              />
+              {query && (
+                <button onClick={() => setQuery('')} className="text-outline hover:text-on-surface ml-2">
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              )}
             </div>
           </div>
         </motion.section>
@@ -73,16 +93,23 @@ export default function SupportPage() {
           <section>
             <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">{t('support.browseTitle')}</h2>
             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {categories.map((cat) => (
-                <motion.div key={cat.title} variants={itemVariants} className="bg-white p-6 rounded-2xl border border-outline-variant/10 hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer group">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-primary">{cat.icon}</span>
-                  </div>
-                  <h3 className="font-headline font-bold text-on-surface mb-1">{cat.title}</h3>
-                  <p className="text-xs text-outline mb-3">{cat.desc}</p>
-                  <span className="text-[10px] font-mono font-bold text-primary">{cat.count} ARTICLES</span>
+              {filteredCategories.map((cat) => (
+                <motion.div key={cat.title} variants={itemVariants}>
+                  <Link href={cat.href} className="block h-full bg-white p-6 rounded-2xl border border-outline-variant/10 hover:shadow-md hover:-translate-y-1 transition-all group">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-primary">{cat.icon}</span>
+                    </div>
+                    <h3 className="font-headline font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">{cat.title}</h3>
+                    <p className="text-xs text-outline mb-3">{cat.desc}</p>
+                    <span className="text-[10px] font-mono font-bold text-primary flex items-center gap-1">
+                      Open <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </span>
+                  </Link>
                 </motion.div>
               ))}
+              {filteredCategories.length === 0 && (
+                <p className="text-on-surface-variant col-span-full text-center py-6">No topics match "{query}"</p>
+              )}
             </motion.div>
           </section>
 
@@ -90,7 +117,10 @@ export default function SupportPage() {
           <section>
             <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">{t('support.faqTitle')}</h2>
             <div className="space-y-3 max-w-3xl">
-              {faqs.map((faq, i) => (
+              {filteredFaqs.length === 0 && (
+                <p className="text-on-surface-variant py-4">No answers match "{query}". Try <Link href="/support/contact" className="text-primary font-bold hover:underline">contacting us</Link>.</p>
+              )}
+              {filteredFaqs.map((faq, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-outline-variant/10 overflow-hidden">
                   <button
                     onClick={() => setOpenFaq(openFaq === i ? null : i)}
