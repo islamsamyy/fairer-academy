@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
-type Tab = 'overview' | 'users' | 'courses' | 'reviews' | 'scholarships' | 'broadcast';
+type Tab = 'overview' | 'users' | 'courses' | 'reviews' | 'scholarships' | 'broadcast' | 'support';
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-100 text-red-700',
@@ -38,6 +38,9 @@ export default function AdminDashboardPage() {
   const [scholarships, setScholarships] = useState<any[]>([]);
   const [schForm, setSchForm] = useState({ title: '', description: '', amount: '', seats: '1', deadline: '' });
   const [schSaving, setSchSaving] = useState(false);
+
+  // Support inbox tab
+  const [messages, setMessages] = useState<any[]>([]);
 
   // Broadcast tab
   const [bcTitle, setBcTitle] = useState('');
@@ -101,17 +104,34 @@ export default function AdminDashboardPage() {
     if (data) setScholarships(data);
   }, []);
 
+  const loadMessages = useCallback(async () => {
+    const { data } = await supabase
+      .from('support_messages')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(200);
+    if (data) setMessages(data);
+  }, []);
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
       const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
       if (profile?.role !== 'admin') { router.push('/dashboard'); return; }
-      await Promise.all([loadOverview(), loadUsers(), loadCourses(), loadReviews(), loadScholarships()]);
+      await Promise.all([loadOverview(), loadUsers(), loadCourses(), loadReviews(), loadScholarships(), loadMessages()]);
       setLoading(false);
     }
     init();
-  }, [router, loadOverview, loadUsers, loadCourses, loadReviews, loadScholarships]);
+  }, [router, loadOverview, loadUsers, loadCourses, loadReviews, loadScholarships, loadMessages]);
+
+  const resolveMessage = async (id: string, current: string) => {
+    const next = current === 'resolved' ? 'open' : 'resolved';
+    setActionLoading(id);
+    await supabase.from('support_messages').update({ status: next }).eq('id', id);
+    setMessages(ms => ms.map(m => m.id === id ? { ...m, status: next } : m));
+    setActionLoading(null);
+  };
 
   const createScholarship = async () => {
     if (!schForm.title.trim()) return;
@@ -227,6 +247,7 @@ export default function AdminDashboardPage() {
     { id: 'courses', icon: 'library_books', label: `Courses (${stats.courses})` },
     { id: 'reviews', icon: 'reviews', label: `Reviews (${stats.reviews})` },
     { id: 'scholarships', icon: 'school', label: `Scholarships (${scholarships.length})` },
+    { id: 'support', icon: 'inbox', label: `Support (${messages.filter(m => m.status !== 'resolved').length})` },
     { id: 'broadcast', icon: 'campaign', label: 'Broadcast' },
   ];
 
@@ -577,6 +598,39 @@ export default function AdminDashboardPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Support Inbox ── */}
+        {tab === 'support' && (
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface mb-6">Support Inbox</h1>
+            <div className="space-y-3">
+              {messages.length === 0 ? (
+                <div className="text-center py-12 text-outline bg-white rounded-2xl border border-slate-200/60">No messages yet</div>
+              ) : messages.map(m => (
+                <div key={m.id} className={`bg-white rounded-2xl border p-5 shadow-sm ${m.status === 'resolved' ? 'border-slate-200/60 opacity-70' : 'border-primary/20'}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="font-bold text-sm text-on-surface">{m.name}</p>
+                        <a href={`mailto:${m.email}`} className="text-xs text-primary hover:underline">{m.email}</a>
+                        {m.subject && <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-container text-outline">{m.subject}</span>}
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${m.status === 'resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{m.status}</span>
+                      </div>
+                      <p className="text-xs text-outline mb-2 font-mono">{new Date(m.created_at).toLocaleString()}</p>
+                      <p className="text-sm text-on-surface-variant whitespace-pre-wrap">{m.message}</p>
+                    </div>
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <a href={`mailto:${m.email}?subject=Re: ${encodeURIComponent(m.subject || 'Your message')}`} className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium text-center">Reply</a>
+                      <button onClick={() => resolveMessage(m.id, m.status)} disabled={actionLoading === m.id} className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium disabled:opacity-50">
+                        {m.status === 'resolved' ? 'Reopen' : 'Resolve'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

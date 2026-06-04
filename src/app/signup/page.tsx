@@ -306,11 +306,11 @@ export default function SignupPage() {
                 </div>
                 <label className="text-sm text-on-surface-variant leading-relaxed" htmlFor="terms">
                   I agree to the{' '}
-                  <Link href="#" className="text-primary font-semibold hover:underline outline-none">
+                  <Link href="/terms" className="text-primary font-semibold hover:underline outline-none">
                     Terms of Mastery
                   </Link>{' '}
                   and{' '}
-                  <Link href="#" className="text-primary font-semibold hover:underline outline-none">
+                  <Link href="/privacy" className="text-primary font-semibold hover:underline outline-none">
                     Privacy Protocol
                   </Link>
                   .

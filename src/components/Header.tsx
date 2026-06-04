@@ -17,6 +17,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [unread, setUnread] = useState(0);
 
   const navLinks = [
     { href: '/', label: t('nav.home'), icon: 'home' },
@@ -38,6 +39,22 @@ export default function Header() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Unread notification count
+  useEffect(() => {
+    if (!user) { setUnread(0); return; }
+    let active = true;
+    async function loadUnread() {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .eq('is_read', false);
+      if (active) setUnread(count || 0);
+    }
+    loadUnread();
+    return () => { active = false; };
+  }, [user, pathname]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -146,7 +163,11 @@ export default function Header() {
                 className="p-2 text-slate-400 hover:text-primary hover:bg-surface-container rounded-xl transition-all outline-none relative"
               >
                 <span className="material-symbols-outlined text-xl">notifications</span>
-                <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
+                {unread > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
               </Link>
             )}
 

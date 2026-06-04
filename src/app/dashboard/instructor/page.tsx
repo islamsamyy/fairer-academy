@@ -174,15 +174,15 @@ export default function InstructorDashboard() {
               </span>
               <span>Overview</span>
             </Link>
-            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+            <Link href="/dashboard/instructor" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
               <span className="material-symbols-outlined group-hover:scale-110 transition-transform">monitoring</span>
               <span>Analytics</span>
             </Link>
-            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+            <Link href="/courses/create" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
               <span className="material-symbols-outlined group-hover:scale-110 transition-transform">menu_book</span>
               <span>Content</span>
             </Link>
-            <Link href="#" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
+            <Link href="/support/community" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
               <span className="material-symbols-outlined group-hover:scale-110 transition-transform">group</span>
               <span>Community</span>
             </Link>

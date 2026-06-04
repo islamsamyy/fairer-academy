@@ -250,7 +250,7 @@ function DashboardContent() {
           <motion.section initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.6 }} className="mb-12">
             <div className="flex justify-between items-end mb-6">
               <h2 className="font-headline text-3xl font-bold">{t('dashboard.continueLearning')}</h2>
-              <a className="text-primary font-medium text-sm flex items-center gap-1 hover:underline" href="#">{t('dashboard.viewAll')} Curriculum <span className="material-symbols-outlined text-sm">arrow_forward</span></a>
+              <Link className="text-primary font-medium text-sm flex items-center gap-1 hover:underline" href="/courses">{t('dashboard.viewAll')} Curriculum <span className="material-symbols-outlined text-sm">arrow_forward</span></Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {loading ? (

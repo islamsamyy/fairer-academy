@@ -44,6 +44,11 @@ function VideoLessonContent() {
   const [enrollment, setEnrollment] = useState<any>(null);
   const [instructor, setInstructor] = useState<any>(null);
   const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+  const [showNotes, setShowNotes] = useState(false);
+  const [note, setNote] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+  const [shareLabel, setShareLabel] = useState('Share');
 
   useEffect(() => {
     async function fetchData() {
@@ -124,6 +129,41 @@ function VideoLessonContent() {
 
     fetchData();
   }, [courseId, initialLessonId, router]);
+
+  // Load this lesson's saved note when lesson/user changes
+  useEffect(() => {
+    async function loadNote() {
+      if (!user || !currentLesson?.id) { setNote(''); return; }
+      const { data } = await supabase
+        .from('lesson_notes')
+        .select('content')
+        .eq('user_id', user.id)
+        .eq('lesson_id', currentLesson.id)
+        .maybeSingle();
+      setNote(data?.content || '');
+    }
+    loadNote();
+  }, [user, currentLesson?.id]);
+
+  const saveNote = async () => {
+    if (!user || !currentLesson?.id) return;
+    setNoteSaving(true);
+    await supabase.from('lesson_notes').upsert(
+      { user_id: user.id, lesson_id: currentLesson.id, content: note, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,lesson_id' }
+    );
+    setNoteSaving(false);
+    setNoteSaved(true);
+    setTimeout(() => setNoteSaved(false), 2000);
+  };
+
+  const handleShare = async () => {
+    const url = typeof window !== 'undefined' ? window.location.href : '';
+    try {
+      if (navigator.share) await navigator.share({ title: currentLesson?.title || 'Lesson', url });
+      else { await navigator.clipboard.writeText(url); setShareLabel('Copied!'); setTimeout(() => setShareLabel('Share'), 2000); }
+    } catch { /* user cancelled */ }
+  };
 
   if (loading) return <div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold">Initializing Learning Environment...</div>;
   if (!course) return <div className="min-h-screen bg-surface flex items-center justify-center text-outline">Course Not Found</div>;
@@ -280,15 +320,39 @@ function VideoLessonContent() {
                     </span>
                     {isCompleted ? 'Completed ✓' : 'Mark Complete'}
                   </button>
-                  <button className="flex-1 sm:flex-none bg-white border border-surface-container-highest text-on-surface px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold hover:bg-surface-container active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
+                  <button onClick={() => setShowNotes(s => !s)} className={`flex-1 sm:flex-none border px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group ${showNotes ? 'bg-primary/10 border-primary text-primary' : 'bg-white border-surface-container-highest text-on-surface hover:bg-surface-container'}`}>
                     <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors">edit_note</span>
                     Notes
                   </button>
-                  <button className="flex-1 sm:flex-none sm:w-auto w-full bg-white border border-surface-container-highest text-on-surface px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold hover:bg-surface-container active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
+                  <button onClick={handleShare} className="flex-1 sm:flex-none sm:w-auto w-full bg-white border border-surface-container-highest text-on-surface px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl font-bold hover:bg-surface-container active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
                     <span className="material-symbols-outlined text-outline group-hover:text-secondary transition-colors">share</span>
-                    Share
+                    {shareLabel}
                   </button>
                 </div>
+
+                {/* My Notes */}
+                {showNotes && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-white rounded-2xl border border-surface-container-highest/50 p-6 mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-headline font-bold text-on-surface flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">edit_note</span> My Notes
+                      </h3>
+                      {noteSaved && <span className="text-xs font-bold text-emerald-600">Saved ✓</span>}
+                    </div>
+                    <textarea
+                      value={note}
+                      onChange={e => setNote(e.target.value)}
+                      rows={6}
+                      placeholder="Jot down your notes for this lesson… (private to you)"
+                      className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    <div className="flex justify-end mt-3">
+                      <button onClick={saveNote} disabled={noteSaving} className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 disabled:opacity-60">
+                        {noteSaving ? 'Saving…' : 'Save Notes'}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Lesson Quiz (renders only if the lesson has a quiz) */}
                 {currentLesson?.id && <LessonQuiz lessonId={currentLesson.id} userId={user?.id ?? null} />}
