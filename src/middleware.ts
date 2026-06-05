@@ -2,11 +2,9 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   });
 
   const supabase = createServerClient(
@@ -14,44 +12,31 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
+        getAll() { return request.cookies.getAll(); },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          response = NextResponse.next({ request: { headers: request.headers } });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
     }
   );
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
+  const { data: { session } } = await supabase.auth.getSession();
   const url = request.nextUrl.clone();
 
-  // If user is NOT logged in and trying to access protected routes
   const protectedRoutes = ['/dashboard', '/profile', '/settings', '/courses/create'];
-  const isProtectedRoute = protectedRoutes.some(route => url.pathname.startsWith(route));
+  const isProtected = protectedRoutes.some(r => url.pathname.startsWith(r));
 
-  if (!session && isProtectedRoute) {
+  if (!session && isProtected) {
     url.pathname = '/login';
+    url.searchParams.set('redirectTo', request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
-  // If user IS logged in and trying to access auth routes
   if (session && (url.pathname === '/login' || url.pathname === '/signup')) {
     url.pathname = '/dashboard';
+    url.searchParams.delete('redirectTo');
     return NextResponse.redirect(url);
   }
 
