@@ -17,6 +17,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
 
   const navLinks = [
@@ -39,6 +40,21 @@ export default function Header() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch avatar from profiles table (reflects uploads without requiring re-login)
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); return; }
+    let active = true;
+    supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setAvatarUrl(data?.avatar_url ?? null);
+      });
+    return () => { active = false; };
+  }, [user, pathname]); // re-fetch on every navigation so settings changes reflect immediately
 
   // Unread notification count
   useEffect(() => {
@@ -186,11 +202,13 @@ export default function Header() {
                   href="/profile"
                   className="ml-1 w-9 h-9 rounded-full overflow-hidden border-2 border-primary-container/30 hover:border-primary transition-colors outline-none flex-shrink-0"
                 >
-                  <img
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    src={user.user_metadata?.avatar_url || "https://lh3.googleusercontent.com/aida-public/AB6AXuBcu6owJHHRi88QAp4CqlGAV77UYcS5vz4jU8flShpDhkF7Fj8TjRRE1OqUB8vaQ4ZlEN9WNNDKg4BshOvMZSkxLtAULXvdbDY-G5Wgn7lovivQG9aJtM6AwUbnoomTpHUukLHu4H3dLsuHZO4xgmrCZOpppl6n2wgReD05O9UcxiJDTQ3557CXmWOASP73lKUrPTXkAM31wQqZ9v_zWuVMY7FZsO9jXLmMxaLf3nPmibNS9_GbIz9o-YYzlLund-rnUNO6QETGF-M"}
-                  />
+                  {avatarUrl ? (
+                    <img alt="Profile" className="w-full h-full object-cover" src={avatarUrl} />
+                  ) : (
+                    <div className="w-full h-full bg-primary/15 flex items-center justify-center text-primary font-bold text-sm">
+                      {(user.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </Link>
                 <button
                   onClick={handleSignOut}
