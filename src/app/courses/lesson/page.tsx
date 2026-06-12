@@ -175,11 +175,11 @@ function VideoLessonContent() {
         <div className="flex items-center gap-4 sm:gap-8">
           <Link href="/" className="text-xl font-bold tracking-tighter text-slate-900 font-headline flex items-center gap-2 outline-none active:scale-95 transition-transform">
             <img
-              alt="Fairer Logo"
+              alt="جامعة فايرير السعودية"
               className="h-8 w-auto"
               src="https://lh3.googleusercontent.com/aida/ADBb0ui2HQlH4wehKDIFaKTzAAckSSlEp01ZDpqHBp-Yp3Xye2uSD5tyyoDtonRUNNrmktf17V6fxm089lUSM3btWWjMN8bKck3QfY8__gPG3swJlkvPSQEtEp6RbYKD4vLTGiZgAzYe3S9tDSNnVFN_JK1jOCv3NCscNRt1YMj5y4rFn-RKfw1XFcA9rSaBS4OJw6NFTLiFD7WPj2PgNr1mkIdjmPLAzA0t1sGxB4LXmNEKL15HOLWPpHzzkBoINpSkbdMeRKKNDepbwA"
             />
-            <span className="text-xl font-black text-slate-900 font-headline tracking-tight hidden sm:inline-block">Fairer</span>
+            <span className="text-xl font-black text-slate-900 font-headline tracking-tight hidden sm:inline-block">جامعة فايرير السعودية</span>
           </Link>
           
         </div>
@@ -474,7 +474,13 @@ function VideoLessonContent() {
 
           {/* Resume Lesson CTA (Sticky Bottom) */}
           <div className="p-4 sm:p-6 bg-white/80 backdrop-blur-md border-t border-surface-container-highest/50 shadow-[0_-10px_30px_rgba(0,0,0,0.02)] hidden md:block mt-auto z-20">
-            <button className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-headline font-bold text-sm tracking-wide shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
+            <button
+              onClick={() => {
+                const video = document.querySelector('video');
+                video?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                video?.play().catch(() => {});
+              }}
+              className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-xl font-headline font-bold text-sm tracking-wide shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/40 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 outline-none group">
               <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">play_arrow</span>
               Resume Lesson
             </button>
@@ -484,7 +490,13 @@ function VideoLessonContent() {
 
       {/* Mobile Sticky Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-lg border-t border-surface-container-highest/50 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] md:hidden z-40">
-        <button className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-3.5 rounded-xl font-headline font-bold text-sm tracking-wide shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 outline-none">
+        <button
+          onClick={() => {
+            const video = document.querySelector('video');
+            video?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            video?.play().catch(() => {});
+          }}
+          className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-3.5 rounded-xl font-headline font-bold text-sm tracking-wide shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2 outline-none">
           <span className="material-symbols-outlined text-[20px]">play_arrow</span>
           Resume Lesson
         </button>

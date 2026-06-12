@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type CertData = {
   id: string;
@@ -52,7 +53,7 @@ function drawCertificate(
   ctx.font = 'bold 18px "Segoe UI", sans-serif';
   ctx.fillStyle = '#00b4d8';
   ctx.textAlign = 'center';
-  ctx.fillText('FAIRER ACADEMY', W / 2, 90);
+  ctx.fillText('جامعة فايرير السعودية', W / 2, 90);
 
   // Decorative divider
   ctx.strokeStyle = '#00b4d8';
@@ -292,9 +293,9 @@ export default function CertificatesPage() {
             <span className="material-symbols-outlined text-7xl text-outline/20 block mb-4">workspace_premium</span>
             <h2 className="text-xl font-bold text-on-surface-variant mb-2">No certificates yet</h2>
             <p className="text-sm text-outline mb-6">Finish a course to automatically receive your certificate.</p>
-            <a href="/courses" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
+            <Link href="/courses" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity">
               Browse Courses
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

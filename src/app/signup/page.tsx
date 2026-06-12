@@ -89,43 +89,28 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-secondary-fixed via-surface to-surface-bright min-h-screen flex items-center justify-center p-6 font-body text-on-background selection:bg-primary-fixed selection:text-on-primary-fixed overflow-hidden relative">
+    <div className="min-h-screen flex items-center justify-center p-6 font-body text-on-background overflow-hidden relative">
+      {/* Animated background */}
+      <div className="absolute inset-0 mesh-gradient z-0" />
+      <div className="absolute top-[-8%] left-[-8%] w-[500px] h-[500px] bg-cyan-300/20 rounded-full blur-[100px] animate-blob pointer-events-none z-0" />
+      <div className="absolute bottom-[-8%] right-[-8%] w-[400px] h-[400px] bg-violet-400/18 rounded-full blur-[80px] animate-blob-delay pointer-events-none z-0" />
+      <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-amber-300/12 rounded-full blur-[70px] animate-blob-slow pointer-events-none z-0" />
+      {/* Floating pills */}
+      <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 left-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
+        🚀 Join 28K+ learners
+      </motion.div>
+      <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 2 }} className="absolute bottom-12 right-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-emerald-600 hidden md:flex items-center gap-2 z-10">
+        ✅ Free to start
+      </motion.div>
+
       <main className="w-full max-w-[480px] relative z-10">
-        {/* Floating Accent Elements for Luminous Logic */}
-        <motion.div
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.5, 0.8, 0.5],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            repeatType: 'reverse',
-            ease: 'easeInOut',
-          }}
-          className="absolute -top-12 -left-12 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -z-10"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.4, 0.7, 0.4],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            repeatType: 'reverse',
-            ease: 'easeInOut',
-            delay: 1,
-          }}
-          className="absolute -bottom-12 -right-12 w-64 h-64 bg-secondary/10 rounded-full blur-[80px] -z-10"
-        />
 
         {/* Signup Card */}
         <motion.section
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="glass-effect rounded-xl shadow-[0_12px_40px_rgba(23,28,33,0.06)] overflow-hidden bg-white/75 backdrop-blur-[16px]"
+          className="glass-glow rounded-3xl shadow-[0_20px_60px_rgba(0,104,123,0.12)] overflow-hidden border border-white/50"
         >
           <div className="p-8 md:p-12">
             {/* Brand Header */}
@@ -134,7 +119,7 @@ export default function SignupPage() {
                 <Link href="/" className="h-12 flex items-center justify-center cursor-pointer outline-none">
                     <Image
                       src="/logo.png"
-                      alt="Fairer Logo"
+                      alt="جامعة فايرير السعودية"
                       width={48}
                       height={48}
                       className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
@@ -142,7 +127,7 @@ export default function SignupPage() {
                 </Link>
               </div>
               <h1 className="font-headline text-4xl font-bold tracking-tight text-on-background mb-2">
-                Fairer
+                جامعة فايرير السعودية
               </h1>
               <p className="text-on-surface-variant font-body">Empowering your journey with equity</p>
             </motion.header>
@@ -302,6 +287,7 @@ export default function SignupPage() {
                     className="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary/20 bg-surface-container-low transition-colors cursor-pointer"
                     id="terms"
                     type="checkbox"
+                    required
                   />
                 </div>
                 <label className="text-sm text-on-surface-variant leading-relaxed" htmlFor="terms">

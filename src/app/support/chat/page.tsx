@@ -13,7 +13,7 @@ const itemVariants: Variants = {
 type Message = { role: 'user' | 'assistant'; content: string };
 
 const initialMessages: Message[] = [
-  { role: 'assistant', content: "Hi! I'm the Fairer Academy assistant. I can recommend courses, check your progress, explain certificates, or help you find your way around. What do you need?" },
+  { role: 'assistant', content: "Hi! I'm the جامعة فايرير السعودية assistant. I can recommend courses, check your progress, explain certificates, or help you find your way around. What do you need?" },
 ];
 
 /** Data-aware rule-based assistant. Pulls real data from Supabase to answer. */
@@ -87,7 +87,7 @@ async function generateReply(text: string): Promise<string> {
     return "Hello! 👋 Ask me to recommend a course, check your progress, or explain how certificates work.";
   }
 
-  return "I'm a focused assistant for Fairer Academy. Try asking me to: recommend a course, show your progress, explain certificates, or help with billing. For anything else, our team is at /support/contact.";
+  return "I'm a focused assistant for جامعة فايرير السعودية. Try asking me to: recommend a course, show your progress, explain certificates, or help with billing. For anything else, our team is at /support/contact.";
 }
 
 export default function ChatPage() {
@@ -198,8 +198,9 @@ export default function ChatPage() {
             className="flex-1 px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20 placeholder:text-outline"
             placeholder="Ask the assistant anything..."
             type="text" value={input}
+            disabled={thinking}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && !thinking && handleSend()}
           />
           <button onClick={() => handleSend()} disabled={thinking} className="p-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all outline-none disabled:opacity-50">
             <span className="material-symbols-outlined">send</span>

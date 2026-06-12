@@ -257,7 +257,7 @@ export default function AdminDashboardPage() {
       <aside className="fixed left-0 top-0 h-full w-56 bg-[#0d1b2a] text-white flex flex-col py-6 px-4 z-40">
         <div className="px-2 mb-8">
           <p className="text-[10px] text-white/40 font-mono uppercase tracking-widest mb-1">Admin Console</p>
-          <h2 className="text-lg font-bold text-white">Fairer Academy</h2>
+          <h2 className="text-lg font-bold text-white">جامعة فايرير السعودية</h2>
         </div>
         <nav className="space-y-1 flex-1">
           {NAV.map(n => (
@@ -288,23 +288,38 @@ export default function AdminDashboardPage() {
         {/* ── Overview ── */}
         {tab === 'overview' && (
           <div>
-            <h1 className="text-2xl font-bold text-on-surface mb-8">Platform Overview</h1>
+            {/* Admin welcome banner */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 p-8 mb-8 border border-white/5">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,104,123,0.3),transparent_60%)] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-16 -mt-16 animate-blob pointer-events-none" />
+              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-white/50 text-xs font-mono font-bold uppercase tracking-widest mb-1">Admin Console</p>
+                  <h1 className="text-3xl font-heading font-black text-white tracking-tight">Platform Overview</h1>
+                  <p className="text-white/50 text-sm mt-1">جامعة فايرير السعودية — Live platform statistics</p>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 glass-dark rounded-xl border border-white/10">
+                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="text-white/70 text-xs font-mono font-bold">All systems operational</span>
+                </div>
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
               {[
-                { label: 'Total Users', value: stats.users, icon: 'group', color: 'text-blue-600 bg-blue-50' },
-                { label: 'Courses', value: stats.courses, icon: 'library_books', color: 'text-primary bg-primary/10' },
-                { label: 'Enrollments', value: stats.enrollments, icon: 'school', color: 'text-emerald-600 bg-emerald-50' },
-                { label: 'Reviews', value: stats.reviews, icon: 'star', color: 'text-amber-600 bg-amber-50' },
+                { label: 'Total Users', value: stats.users, icon: 'group', color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'Courses', value: stats.courses, icon: 'library_books', color: 'text-primary', bg: 'bg-primary/10' },
+                { label: 'Enrollments', value: stats.enrollments, icon: 'school', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Reviews', value: stats.reviews, icon: 'star', color: 'text-amber-600', bg: 'bg-amber-50' },
               ].map(s => (
                 <motion.div key={s.label} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm"
+                  className="glass-glow rounded-2xl p-6 card-hover-glow"
                 >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${s.color}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${s.bg} ${s.color}`}>
                     <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
                   </div>
-                  <p className="text-3xl font-bold text-on-surface font-mono">{s.value.toLocaleString()}</p>
-                  <p className="text-sm text-outline mt-1">{s.label}</p>
+                  <p className={`text-3xl font-heading font-black font-mono ${s.color}`}>{s.value.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{s.label}</p>
                 </motion.div>
               ))}
             </div>

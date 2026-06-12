@@ -13,7 +13,7 @@ export default function TermsPage() {
         <div className="space-y-8 text-on-surface-variant leading-relaxed text-sm">
           <section>
             <h2 className="text-lg font-bold text-on-surface mb-2">1. Acceptance of Terms</h2>
-            <p>By creating an account or using Fairer Academy, you agree to these Terms. If you do not agree, please do not use the platform.</p>
+            <p>By creating an account or using جامعة فايرير السعودية, you agree to these Terms. If you do not agree, please do not use the platform.</p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-on-surface mb-2">2. Accounts</h2>
@@ -29,7 +29,7 @@ export default function TermsPage() {
           </section>
           <section>
             <h2 className="text-lg font-bold text-on-surface mb-2">5. Instructor Content</h2>
-            <p>Instructors retain ownership of the content they publish and are responsible for its accuracy and legality. Fairer Academy is a hosting platform.</p>
+            <p>Instructors retain ownership of the content they publish and are responsible for its accuracy and legality. جامعة فايرير السعودية is a hosting platform.</p>
           </section>
           <section>
             <h2 className="text-lg font-bold text-on-surface mb-2">6. Acceptable Use</h2>

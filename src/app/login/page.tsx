@@ -90,47 +90,23 @@ export default function LoginPage() {
 
   return (
     <div className="bg-surface font-body text-on-background min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary-fixed/30 via-surface to-surface"></div>
-      <motion.div
-        animate={{
-          scale: [1, 1.1, 1],
-          opacity: [0.5, 0.8, 0.5],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          repeatType: 'reverse',
-          ease: 'easeInOut',
-        }}
-        className="absolute -top-24 -left-24 w-96 h-96 bg-primary-container/10 rounded-full blur-[100px]"
-      />
-      <motion.div
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.6, 0.3],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          repeatType: 'reverse',
-          ease: 'easeInOut',
-          delay: 1,
-        }}
-        className="absolute -bottom-24 -right-24 w-96 h-96 bg-secondary-container/5 rounded-full blur-[100px]"
-      />
-
-      {/* Decorative Floating Shapes */}
-      <motion.div
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        className="absolute top-1/4 -right-12 w-24 h-24 bg-gradient-to-br from-tertiary-container/20 to-transparent rounded-full blur-2xl z-0"
-      />
-      <motion.div
-        animate={{ y: [0, 30, 0], x: [0, -20, 0] }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-        className="absolute bottom-1/4 -left-12 w-32 h-32 bg-gradient-to-tr from-secondary/10 to-transparent rounded-full blur-3xl z-0"
-      />
+      {/* Background gradient base */}
+      <div className="absolute inset-0 z-0 mesh-gradient" />
+      {/* Animated blobs */}
+      <div className="absolute top-[-5%] left-[-5%] w-[500px] h-[500px] bg-cyan-300/25 rounded-full blur-[100px] animate-blob pointer-events-none z-0" />
+      <div className="absolute bottom-[-5%] right-[-5%] w-[400px] h-[400px] bg-violet-400/20 rounded-full blur-[80px] animate-blob-delay pointer-events-none z-0" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[60px] animate-blob-slow pointer-events-none z-0" />
+      {/* Floating feature pills */}
+      <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 right-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
+        <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+        1,243 students online
+      </motion.div>
+      <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }} className="absolute bottom-12 left-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
+        🔥 62-day streak record
+      </motion.div>
+      <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute top-1/3 left-6 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-accent hidden lg:flex items-center gap-2 z-10">
+        🎓 480+ courses
+      </motion.div>
 
       {/* Login Container */}
       <main className="relative z-10 w-full max-w-[480px] px-6 py-12">
@@ -144,13 +120,13 @@ export default function LoginPage() {
           <Link href="/" className="flex items-center gap-3 mb-4 inline-flex">
             <Image
               src="/logo.png"
-              alt="Fairer Logo"
+              alt="جامعة فايرير السعودية"
               width={40}
               height={40}
               className="h-10 w-auto object-contain"
             />
             <h1 className="font-headline text-2xl font-bold tracking-tight text-on-surface">
-              Fairer
+              جامعة فايرير السعودية
             </h1>
           </Link>
           <div className="space-y-1">
@@ -168,7 +144,7 @@ export default function LoginPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="glass-effect rounded-3xl p-8 shadow-[0_12px_40px_rgba(23,28,33,0.04)] ghost-border border-white/40"
+          className="glass-glow rounded-3xl p-8 border border-white/50 shadow-[0_20px_60px_rgba(0,104,123,0.12)]"
         >
           <form className="space-y-6" onSubmit={handleLogin}>
             {/* Error Message */}

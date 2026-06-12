@@ -133,11 +133,11 @@ export default function InstructorDashboard() {
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-2 active:scale-95 transition-transform outline-none">
               <img
-                alt="Fairer Logo"
+                alt="جامعة فايرير السعودية"
                 className="h-8 w-auto object-contain"
                 src="https://lh3.googleusercontent.com/aida/ADBb0ui2HQlH4wehKDIFaKTzAAckSSlEp01ZDpqHBp-Yp3Xye2uSD5tyyoDtonRUNNrmktf17V6fxm089lUSM3btWWjMN8bKck3QfY8__gPG3swJlkvPSQEtEp6RbYKD4vLTGiZgAzYe3S9tDSNnVFN_JK1jOCv3NCscNRt1YMj5y4rFn-RKfw1XFcA9rSaBS4OJw6NFTLiFD7WPj2PgNr1mkIdjmPLAzA0t1sGxB4LXmNEKL15HOLWPpHzzkBoINpSkbdMeRKKNDepbwA"
               />
-              <span className="text-2xl font-black text-primary tracking-tighter font-headline">Fairer</span>
+              <span className="text-2xl font-black text-primary tracking-tighter font-headline">جامعة فايرير السعودية</span>
             </Link>
             
           </div>
@@ -174,10 +174,6 @@ export default function InstructorDashboard() {
               </span>
               <span>Overview</span>
             </Link>
-            <Link href="/dashboard/instructor" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
-              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">monitoring</span>
-              <span>Analytics</span>
-            </Link>
             <Link href="/courses/create" className="group flex items-center gap-3 px-4 py-3 text-slate-500 hover:text-on-surface hover:bg-surface-container transition-all duration-200 rounded-xl font-body text-sm font-medium outline-none">
               <span className="material-symbols-outlined group-hover:scale-110 transition-transform">menu_book</span>
               <span>Content</span>
@@ -203,31 +199,39 @@ export default function InstructorDashboard() {
         <main className="flex-1 overflow-y-auto w-full">
           <div className="p-6 md:p-8 lg:p-10 max-w-7xl mx-auto space-y-10 pb-24 lg:pb-10">
             {/* Header Section */}
-            <motion.header
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex flex-col xl:flex-row xl:items-end justify-between gap-6"
-            >
-              <div className="max-w-2xl">
-                <h1 className="text-4xl font-bold tracking-tight text-on-background mb-2 font-headline">
-                  {loading ? 'Initializing...' : `Welcome back, ${profile?.full_name || 'Instructor'}.`}
-                </h1>
-                <p className="text-xl text-slate-500">
-                  Your <span className="text-primary font-semibold">Fairer</span> performance is updated in real-time.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <button className="flex items-center gap-2 px-5 py-3 bg-white/50 backdrop-blur-md border border-outline-variant/20 rounded-xl font-semibold text-sm hover:bg-white transition-all outline-none">
-                  <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>
-                    share
-                  </span>
-                  Share Stats
-                </button>
-                <Link href="/courses/create" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-primary to-primary-container text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/10 active:scale-95 transition-transform hover:shadow-primary/30 outline-none">
-                  <span className="material-symbols-outlined">rocket_launch</span>
-                  Launch New Module
-                </Link>
+            <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-accent via-violet-600 to-primary p-8 mb-4">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(255,255,255,0.12),transparent_60%)] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20 animate-blob pointer-events-none" />
+                <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+                  <div>
+                    <p className="text-white/70 text-xs font-mono font-bold uppercase tracking-widest mb-1">Instructor Studio</p>
+                    <h1 className="text-4xl font-heading font-black tracking-tighter text-white mb-2">
+                      {loading ? 'Initializing...' : `Welcome back, ${profile?.full_name || 'Instructor'}.`}
+                    </h1>
+                    <p className="text-white/70 text-sm">Your جامعة فايرير السعودية performance is updated in real-time.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 flex-shrink-0">
+                    <button
+                      onClick={() => {
+                        const text = `My جامعة فايرير السعودية instructor stats — check out my courses!`;
+                        if (navigator.share) {
+                          navigator.share({ title: 'جامعة فايرير السعودية', text, url: window.location.origin });
+                        } else {
+                          navigator.clipboard.writeText(`${text} ${window.location.origin}`);
+                          alert('تم نسخ الرابط! Stats link copied to clipboard.');
+                        }
+                      }}
+                      className="flex items-center gap-2 px-5 py-3 glass-dark rounded-xl font-semibold text-sm text-white hover:bg-white/20 transition-all border border-white/10">
+                      <span className="material-symbols-outlined text-white/70">share</span>
+                      Share Stats
+                    </button>
+                    <Link href="/courses/create" className="flex items-center gap-2 px-6 py-3 bg-white text-primary rounded-xl font-heading font-black text-sm shadow-lg hover:scale-105 transition-transform">
+                      <span className="material-symbols-outlined">rocket_launch</span>
+                      Launch New Module
+                    </Link>
+                  </div>
+                </div>
               </div>
             </motion.header>
 
@@ -385,9 +389,9 @@ export default function InstructorDashboard() {
                     </div>
                     <h3 className="text-lg font-bold mb-1 font-headline">Top Instructor</h3>
                     <p className="text-sm opacity-90 mb-6 font-medium">Awarded for high student satisfaction scores 3 months in a row.</p>
-                    <button className="w-full py-2.5 bg-white/50 hover:bg-white/80 backdrop-blur text-xs font-bold rounded-xl border border-white/40 transition-all text-on-tertiary-container shadow-sm">
+                    <Link href="/certificates" className="block text-center w-full py-2.5 bg-white/50 hover:bg-white/80 backdrop-blur text-xs font-bold rounded-xl border border-white/40 transition-all text-on-tertiary-container shadow-sm">
                       View Rewards
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </motion.div>

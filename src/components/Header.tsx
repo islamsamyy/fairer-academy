@@ -108,14 +108,14 @@ export default function Header() {
               <div className="relative">
                 <Image
                   src="/logo.png"
-                  alt="Fairer Academy Logo"
+                  alt="جامعة فايرير السعودية"
                   width={42}
                   height={42}
                   className="relative z-10 group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(0,240,255,0.4)]"
                 />
               </div>
               <span className="font-heading text-2xl font-black tracking-tighter text-slate-900 flex items-center">
-                Fairer<span className="text-primary">.</span>
+                جامعة فايرير السعودية<span className="text-primary">.</span>
               </span>
             </Link>
 

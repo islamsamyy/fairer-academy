@@ -21,6 +21,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [card, setCard] = useState({ number: '', expiry: '', cvc: '' });
+  const [cardError, setCardError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -34,6 +36,22 @@ export default function CheckoutPage() {
 
   const handleCompletePayment = async () => {
     if (!user || cart.length === 0) return;
+
+    // Basic card validation (simulation mode still requires plausible input)
+    const digits = card.number.replace(/\s/g, '');
+    if (!/^\d{13,19}$/.test(digits)) {
+      setCardError('Please enter a valid card number.');
+      return;
+    }
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(card.expiry)) {
+      setCardError('Expiry must be in MM/YY format.');
+      return;
+    }
+    if (!/^\d{3,4}$/.test(card.cvc)) {
+      setCardError('Please enter a valid CVC.');
+      return;
+    }
+    setCardError(null);
 
     setIsProcessing(true);
     try {
@@ -80,7 +98,7 @@ export default function CheckoutPage() {
         const list = cart.map(i => `<li>${i.title}</li>`).join('');
         sendEmail(
           user.email,
-          'Your Fairer Academy enrollment is confirmed',
+          'Your جامعة فايرير السعودية enrollment is confirmed',
           basicEmail(
             'Enrollment confirmed 🎉',
             `Thanks for your purchase! You now have lifetime access to:<ul>${list}</ul>`,
@@ -99,6 +117,14 @@ export default function CheckoutPage() {
       setIsProcessing(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="bg-surface font-body min-h-screen flex items-center justify-center">
+        <p className="text-primary font-bold animate-pulse">Verifying your session…</p>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -143,12 +169,32 @@ export default function CheckoutPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">Card Number</label>
-                  <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="4242 4242 4242 4242" type="text" />
+                  <input
+                    value={card.number}
+                    onChange={(e) => setCard(c => ({ ...c, number: e.target.value }))}
+                    inputMode="numeric"
+                    autoComplete="cc-number"
+                    className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="4242 4242 4242 4242" type="text" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="MM/YY" type="text" />
-                  <input className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="CVC" type="text" />
+                  <input
+                    value={card.expiry}
+                    onChange={(e) => setCard(c => ({ ...c, expiry: e.target.value }))}
+                    autoComplete="cc-exp"
+                    className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="MM/YY" type="text" />
+                  <input
+                    value={card.cvc}
+                    onChange={(e) => setCard(c => ({ ...c, cvc: e.target.value }))}
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    className="w-full px-4 py-3 rounded-xl bg-surface-container-low border border-outline-variant/20 text-sm outline-none focus:ring-2 focus:ring-primary/20" placeholder="CVC" type="text" />
                 </div>
+                {cardError && (
+                  <p className="text-sm text-destructive font-medium flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {cardError}
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

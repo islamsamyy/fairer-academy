@@ -148,31 +148,51 @@ function DashboardContent() {
 
           {/* Header Section */}
           <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="mb-12">
-            <h1 className="font-headline text-5xl font-bold tracking-tight text-on-background mb-2">
-              Assalam, <span className="text-primary">{loading ? '...' : (profile?.full_name || 'Innovator')}</span>! 👋
-            </h1>
-            <p className="text-on-surface-variant font-body">Your global impact path is expanding. You’re officially in the top 10% of active learners this week.</p>
+            {/* Futuristic glass welcome banner */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary via-cyan-600 to-secondary p-8 mb-8">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_50%,rgba(255,255,255,0.15),transparent_60%)] pointer-events-none" />
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 animate-blob pointer-events-none" />
+              <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                <div>
+                  <p className="text-white/70 text-xs font-mono font-bold uppercase tracking-widest mb-1">Welcome back</p>
+                  <h1 className="font-heading text-4xl sm:text-5xl font-black tracking-tighter text-white mb-2">
+                    Assalam, <span className="text-white/90">{loading ? '...' : (profile?.full_name || 'Innovator')}</span>! 👋
+                  </h1>
+                  <p className="text-white/70 font-body text-sm">You’re in the top 10% of active learners this week.</p>
+                </div>
+                <div className="flex gap-4 flex-shrink-0">
+                  <div className="glass-dark rounded-2xl px-5 py-3 text-center border border-white/10">
+                    <p className="text-white font-heading font-black text-2xl">🔥 12</p>
+                    <p className="text-white/50 text-[10px] font-mono uppercase tracking-widest">Day streak</p>
+                  </div>
+                  <div className="glass-dark rounded-2xl px-5 py-3 text-center border border-white/10">
+                    <p className="text-white font-heading font-black text-2xl">{loading ? '—' : enrollments.length}</p>
+                    <p className="text-white/50 text-[10px] font-mono uppercase tracking-widest">Courses</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.header>
 
           {/* Stats Grid */}
           <motion.section initial="hidden" animate="visible" variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {/* Stat Card: Streak */}
-            <motion.div variants={fadeUpVariant} className="bg-surface-container-lowest p-6 rounded-xl border border-primary-container/5 hover:shadow-[0_0_15px_rgba(0,104,123,0.15)] transition-shadow">
+            <motion.div variants={fadeUpVariant} className="glass-glow p-6 rounded-2xl card-hover-glow">
               <div className="flex items-center justify-between mb-4">
-                <span className="material-symbols-outlined text-primary-container text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
-                <span className="text-primary text-xs font-mono">+2 today</span>
+                <span className="material-symbols-outlined text-orange-500 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                <span className="text-primary text-xs font-mono bg-primary/10 px-2 py-1 rounded-full">+2 today</span>
               </div>
-              <p className="text-on-surface-variant text-sm font-medium">Learning Streak</p>
-              <h3 className="text-3xl font-headline font-bold">12 Days</h3>
+              <p className="text-muted-foreground text-sm font-medium">Learning Streak</p>
+              <h3 className="text-3xl font-heading font-black text-on-background">12 Days</h3>
             </motion.div>
             {/* Stat Card: Courses */}
-            <motion.div variants={fadeUpVariant} className="bg-surface-container-lowest p-6 rounded-xl border border-secondary-container/5 hover:shadow-lg transition-shadow">
+            <motion.div variants={fadeUpVariant} className="glass-glow p-6 rounded-2xl card-hover-glow">
               <div className="flex items-center justify-between mb-4">
                 <span className="material-symbols-outlined text-secondary text-3xl">menu_book</span>
-                <span className="text-secondary text-xs font-mono">{enrollments.length} Active</span>
+                <span className="text-secondary text-xs font-mono bg-secondary/10 px-2 py-1 rounded-full">{enrollments.length} Active</span>
               </div>
-              <p className="text-on-surface-variant text-sm font-medium">In Progress</p>
-              <h3 className="text-3xl font-headline font-bold">{enrollments.length} Courses</h3>
+              <p className="text-muted-foreground text-sm font-medium">In Progress</p>
+              <h3 className="text-3xl font-heading font-black text-on-background">{enrollments.length} Courses</h3>
             </motion.div>
             {/* Stat Card: Certificates */}
             <motion.div variants={fadeUpVariant} className="bg-surface-container-lowest p-6 rounded-xl border border-tertiary-container/5 hover:shadow-lg transition-shadow">
@@ -357,12 +377,17 @@ function DashboardContent() {
                       <h4 className="font-headline font-bold text-lg mb-1">{cert.courses?.title || 'Course Completed'}</h4>
                       <p className="text-on-surface-variant text-xs mb-4">Issued: {new Date(cert.issued_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                       <div className="flex gap-2">
-                        <button className="px-4 py-2 bg-on-background text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:-translate-y-0.5 transition-transform active:scale-95">
+                        <Link href="/certificates" className="px-4 py-2 bg-on-background text-white text-xs font-bold rounded-lg flex items-center gap-2 hover:-translate-y-0.5 transition-transform active:scale-95">
                           <span className="material-symbols-outlined text-sm">picture_as_pdf</span> PDF
-                        </button>
-                        <button className="px-4 py-2 border border-outline text-on-surface-variant text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-surface-container-high hover:-translate-y-0.5 transition-all">
+                        </Link>
+                        <a
+                          href={`https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(cert.courses?.title || 'Course Certificate')}&organizationName=${encodeURIComponent('جامعة فايرير السعودية')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 border border-outline text-on-surface-variant text-xs font-bold rounded-lg flex items-center gap-2 hover:bg-surface-container-high hover:-translate-y-0.5 transition-all"
+                        >
                           <span className="material-symbols-outlined text-sm">share</span> LinkedIn
-                        </button>
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -374,10 +399,12 @@ function DashboardContent() {
       </main>
 
       {/* Contextual FAB (Dashboard) */}
-      <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1, type: "spring", stiffness: 200 }} className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-2xl flex items-center justify-center group hover:scale-110 active:scale-90 transition-all z-50">
-        <span className="material-symbols-outlined text-3xl">add</span>
-        <span className="absolute right-full mr-4 bg-on-background text-white text-xs font-bold py-2 px-4 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Join New Lesson</span>
-      </motion.button>
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1, type: "spring", stiffness: 200 }} className="fixed bottom-8 right-8 z-50">
+        <Link href="/courses" className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-2xl flex items-center justify-center group hover:scale-110 active:scale-90 transition-all">
+          <span className="material-symbols-outlined text-3xl">add</span>
+          <span className="absolute right-full mr-4 bg-on-background text-white text-xs font-bold py-2 px-4 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Join New Lesson</span>
+        </Link>
+      </motion.div>
     </div>
   );
 }

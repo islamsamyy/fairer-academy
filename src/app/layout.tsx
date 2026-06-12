@@ -24,8 +24,8 @@ const notoSansArabic = Noto_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Faireer",
-  description: "Faireer Academy: Luminous Logic",
+  title: "جامعة فايرير السعودية",
+  description: "فايرير: منطق التألق",
 };
 
 

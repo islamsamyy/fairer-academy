@@ -218,7 +218,7 @@ export default function CourseEditPage() {
   return (
     <div className="min-h-screen bg-surface font-body pb-32">
       <header className="fixed top-0 w-full z-50 h-16 bg-white border-b border-outline-variant/10 flex items-center px-6 gap-4">
-        <Link href="/dashboard/admin" className="text-sm text-outline hover:text-on-surface flex items-center gap-1">
+        <Link href="/dashboard/instructor" className="text-sm text-outline hover:text-on-surface flex items-center gap-1">
           <span className="material-symbols-outlined text-sm">arrow_back</span> Back
         </Link>
         <h1 className="font-bold text-on-surface truncate flex-1">Edit: {title || 'Untitled'}</h1>

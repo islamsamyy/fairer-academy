@@ -26,6 +26,14 @@ export default function Courses() {
   const [maxPrice, setMaxPrice] = useState(5000);
   const [selectedComplexity, setSelectedComplexity] = useState('');
   const [enrollmentCounts, setEnrollmentCounts] = useState<Record<string, number>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [fetchError, setFetchError] = useState(false);
+
+  // Pick up ?category= from homepage category cards
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('category');
+    if (param) setSelectedCategory(param);
+  }, []);
 
   useEffect(() => {
     async function fetchCourses() {
@@ -61,7 +69,11 @@ export default function Courses() {
 
       const { data, error } = await query;
 
-      if (!error && data) {
+      if (error) {
+        setFetchError(true);
+        setCourses([]);
+      } else if (data) {
+        setFetchError(false);
         setCourses(data);
       }
       setLoading(false);
@@ -178,7 +190,7 @@ export default function Courses() {
                 <div className="relative z-10">
                   <p className="text-[10px] font-mono opacity-80 mb-2 uppercase tracking-tighter">{t('courses.proOfferLabel')}</p>
                   <h4 className="font-heading font-bold text-lg leading-tight mb-4">{t('courses.proOfferTitle')}</h4>
-                  <button className="bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-xl hover:scale-105 transition-transform">{t('courses.proOfferCta')}</button>
+                  <Link href="/scholarships" className="inline-block bg-white text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-xl hover:scale-105 transition-transform">{t('courses.proOfferCta')}</Link>
                 </div>
                 <div className="absolute -right-4 -bottom-4 opacity-20 group-hover:scale-125 transition-transform">
                   <span className="material-symbols-outlined text-7xl" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
@@ -213,19 +225,33 @@ export default function Courses() {
                 />
               </div>
               <div className="hidden xl:flex items-center gap-4 bg-surface-container-low p-2 rounded-2xl border border-outline-variant/10">
-                <button className="bg-white text-primary shadow-sm p-3 rounded-xl material-symbols-outlined">grid_view</button>
-                <button className="text-outline-variant p-3 rounded-xl material-symbols-outlined hover:text-primary transition-colors">list</button>
+                <button
+                  aria-label="Grid view"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-3 rounded-xl material-symbols-outlined transition-colors ${viewMode === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-outline-variant hover:text-primary'}`}
+                >grid_view</button>
+                <button
+                  aria-label="List view"
+                  onClick={() => setViewMode('list')}
+                  className={`p-3 rounded-xl material-symbols-outlined transition-colors ${viewMode === 'list' ? 'bg-white text-primary shadow-sm' : 'text-outline-variant hover:text-primary'}`}
+                >list</button>
               </div>
             </div>
           </header>
 
           {/* Course Bento Grid */}
-          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div initial="hidden" animate="visible" variants={staggerContainer} className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "grid grid-cols-1 gap-6"}>
             {loading ? (
               // Loading Shimmers
               [1, 2, 3].map((i) => (
                 <div key={i} className="h-[400px] bg-surface-container-low rounded-3xl animate-pulse" />
               ))
+            ) : fetchError ? (
+              <div className="col-span-full py-20 text-center">
+                <span className="material-symbols-outlined text-destructive text-6xl mb-4">error</span>
+                <p className="text-on-surface-variant font-medium mb-4">Something went wrong loading courses. Please try again.</p>
+                <button onClick={() => window.location.reload()} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors">Retry</button>
+              </div>
             ) : courses.length === 0 ? (
               <div className="col-span-full py-20 text-center">
                 <span className="material-symbols-outlined text-outline-variant text-6xl mb-4">clinical_notes</span>
@@ -299,7 +325,7 @@ export default function Courses() {
                       </div>
                       <span className="text-xs text-slate-400 font-mono">{t('courses.featuredEnrolled')}</span>
                     </div>
-                    <button className="w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-2xl font-bold tracking-tight hover:opacity-90 transition-all">{t('courses.featuredCta')}</button>
+                    <Link href={courses[0] ? `/courses/${courses[0].id}` : '/scholarships'} className="block text-center w-full bg-gradient-to-r from-primary to-primary-container text-white py-4 rounded-2xl font-bold tracking-tight hover:opacity-90 transition-all">{t('courses.featuredCta')}</Link>
                   </div>
                 </div>
               </motion.div>
@@ -317,10 +343,10 @@ export default function Courses() {
                 <p className="text-on-surface-variant text-sm">{t('courses.scholarshipBody')}</p>
               </div>
             </div>
-            <button className="font-mono text-sm font-bold text-secondary uppercase tracking-widest hover:translate-x-2 transition-transform flex items-center gap-2 whitespace-nowrap">
+            <Link href="/scholarships" className="font-mono text-sm font-bold text-secondary uppercase tracking-widest hover:translate-x-2 transition-transform flex items-center gap-2 whitespace-nowrap">
               {t('courses.scholarshipCta')}
               <span className="material-symbols-outlined">arrow_right_alt</span>
-            </button>
+            </Link>
           </motion.div>
         </main>
       </div>

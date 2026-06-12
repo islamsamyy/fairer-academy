@@ -69,7 +69,7 @@ export default function ContactPage() {
                   </button>
                 </div>
               ) : (
-                <>
+                <form onSubmit={(e) => { e.preventDefault(); submit(); }}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2">{t('contact.nameLabel') || 'Name'}</label>
@@ -95,13 +95,13 @@ export default function ContactPage() {
                   </div>
                   {error && <p className="text-sm text-error font-medium mb-4">{error}</p>}
                   <button
-                    onClick={submit}
+                    type="submit"
                     disabled={sending}
                     className="w-full bg-gradient-to-br from-primary to-primary-container text-white py-4 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all outline-none flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     <span className="material-symbols-outlined">send</span> {sending ? 'Sending…' : (t('contact.send') || 'Send Message')}
                   </button>
-                </>
+                </form>
               )}
             </div>
           </motion.div>

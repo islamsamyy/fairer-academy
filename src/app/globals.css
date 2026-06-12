@@ -161,3 +161,139 @@ html[dir="rtl"] {
 [dir="rtl"] .group-hover\:translate-x-1:hover {
   transform: translateX(-0.25rem);
 }
+
+/* ─── Futuristic Animation Keyframes ─── */
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(40px, -30px) scale(1.08); }
+  66%       { transform: translate(-20px, 20px) scale(0.95); }
+}
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-14px); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 104, 123, 0.4); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 12px rgba(0, 104, 123, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0   rgba(0, 104, 123, 0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0, 217, 255, 0.3); }
+  50%       { box-shadow: 0 0 40px rgba(0, 217, 255, 0.6), 0 0 80px rgba(113, 42, 226, 0.2); }
+}
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Animation Utility Classes ─── */
+.animate-blob       { animation: blob-drift 12s ease-in-out infinite; }
+.animate-blob-delay { animation: blob-drift 14s ease-in-out infinite 4s; }
+.animate-blob-slow  { animation: blob-drift 18s ease-in-out infinite 8s; }
+.animate-ticker     { animation: ticker-scroll 28s linear infinite; }
+.animate-float      { animation: float-y 4s ease-in-out infinite; }
+.animate-pulse-ring { animation: pulse-ring 2s ease-out infinite; }
+.animate-glow       { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-rotate-slow{ animation: rotate-slow 20s linear infinite; }
+
+/* ─── Glass Variants ─── */
+.glass-strong {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.glass-dark {
+  background: rgba(15, 25, 35, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.glass-glow {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.12), 0 8px 32px rgba(23,28,33,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ─── Shimmer Skeleton ─── */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f4f8 25%, #e2eaf2 50%, #f0f4f8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+}
+
+/* ─── Gradient Text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #00687b 0%, #00d9ff 50%, #712ae2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-warm {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #712ae2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Section Blob Background ─── */
+.blob-bg {
+  position: relative;
+  overflow: hidden;
+}
+.blob-bg::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(0,217,255,0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: blob-drift 16s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.blob-bg::after {
+  content: '';
+  position: absolute;
+  bottom: -20%;
+  right: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(113,42,226,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: blob-drift 20s ease-in-out infinite 6s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Card Hover Glow ─── */
+.card-hover-glow {
+  transition: all 0.3s ease;
+}
+.card-hover-glow:hover {
+  box-shadow: 0 0 0 1px rgba(0,217,255,0.3), 0 8px 32px rgba(0,217,255,0.15), 0 2px 8px rgba(23,28,33,0.06);
+  transform: translateY(-4px);
+}
+
+/* ─── Progress Ring ─── */
+.progress-ring circle {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}

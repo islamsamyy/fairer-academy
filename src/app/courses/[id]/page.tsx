@@ -51,6 +51,8 @@ export default function CourseDetailPage() {
   const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, any[]>>({});
   const [newAnswer, setNewAnswer] = useState<Record<string, string>>({});
+  const [upvoting, setUpvoting] = useState<string | null>(null);
+  const [instructorStats, setInstructorStats] = useState({ courses: 0, students: 0 });
 
   useEffect(() => {
     async function fetchData() {
@@ -121,8 +123,27 @@ export default function CourseDetailPage() {
             .select('*')
             .eq('user_id', user.id)
             .eq('course_id', id)
-            .single();
+            .maybeSingle();
           setIsEnrolled(!!enrollData);
+        }
+
+        // Real instructor stats
+        if (courseData.instructor_id) {
+          const { data: instCourses } = await supabase
+            .from('courses')
+            .select('id')
+            .eq('instructor_id', courseData.instructor_id)
+            .eq('is_published', true);
+          const courseIds = (instCourses || []).map(c => c.id);
+          let studentCount = 0;
+          if (courseIds.length > 0) {
+            const { count: sc } = await supabase
+              .from('enrollments')
+              .select('*', { count: 'exact', head: true })
+              .in('course_id', courseIds);
+            studentCount = sc || 0;
+          }
+          setInstructorStats({ courses: courseIds.length, students: studentCount });
         }
       }
       setLoading(false);
@@ -138,7 +159,7 @@ export default function CourseDetailPage() {
       title: course.title,
       price: course.price,
       instructor: instructor?.full_name || 'Expert Instructor',
-      image_url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB-cwUxhpbUTCHKzLUd9Wvw9Rcz4SrP8uF5i9okP9KOy5z4BQGqQcXutFTTN3QI74bdUt-cGXvfBu0YaieHp8PdxKU2vmheYd8KNhLJYCx8uS20a6o80afpMqpClg3n1xhIrErPBORiKG3HefpGaiO_gTszEDMPJwDnnWtRWhBSKipDx-Oby8QfNFNstqFwvjGwPVnU3DLLMlko-xJDG8ChQS8psE0ep5p-mPjdKZIpLZLzBG6w1139pd69l-DL2qMR5CiQknZxCSM',
+      image_url: course.thumbnail_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop',
     });
     router.push('/cart');
   };
@@ -196,9 +217,9 @@ export default function CourseDetailPage() {
           className="relative h-80 sm:h-96 overflow-hidden"
         >
           <img
-            alt="Course Hero"
+            alt={course.title}
             className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-cwUxhpbUTCHKzLUd9Wvw9Rcz4SrP8uF5i9okP9KOy5z4BQGqQcXutFTTN3QI74bdUt-cGXvfBu0YaieHp8PdxKU2vmheYd8KNhLJYCx8uS20a6o80afpMqpClg3n1xhIrErPBORiKG3HefpGaiO_gTszEDMPJwDnnWtRWhBSKipDx-Oby8QfNFNstqFwvjGwPVnU3DLLMlko-xJDG8ChQS8psE0ep5p-mPjdKZIpLZLzBG6w1139pd69l-DL2qMR5CiQknZxCSM"
+            src={course.thumbnail_url || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/50 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
@@ -530,6 +551,8 @@ export default function CourseDetailPage() {
                               setQuestions(qs => [data, ...qs]);
                               setNewQuestion({ title: '', body: '' });
                               setShowQuestionForm(false);
+                            } else if (error) {
+                              alert('Failed to post your question. Please try again.');
                             }
                             setSubmittingQuestion(false);
                           }}
@@ -547,8 +570,10 @@ export default function CourseDetailPage() {
                     .filter(q => !qaSearch || q.title.toLowerCase().includes(qaSearch.toLowerCase()))
                     .map(q => (
                       <div key={q.id} className="bg-surface-container-lowest rounded-2xl border border-outline-variant/10 overflow-hidden">
-                        <button
-                          className="w-full flex items-start gap-4 p-5 hover:bg-surface-container-low/40 transition-colors text-left group"
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          className="w-full flex items-start gap-4 p-5 hover:bg-surface-container-low/40 transition-colors text-left group cursor-pointer"
                           onClick={async () => {
                             if (expandedQuestion === q.id) { setExpandedQuestion(null); return; }
                             setExpandedQuestion(q.id);
@@ -561,15 +586,21 @@ export default function CourseDetailPage() {
                               setAnswers(a => ({ ...a, [q.id]: data || [] }));
                             }
                           }}
+                          onKeyDown={e => { if (e.key === 'Enter') (e.currentTarget as HTMLElement).click(); }}
                         >
                           <div className="flex flex-col items-center gap-1 min-w-[44px]">
                             <button
+                              type="button"
+                              aria-label="Upvote question"
+                              disabled={upvoting === q.id}
                               onClick={async e => {
                                 e.stopPropagation();
-                                await supabase.from('questions').update({ upvotes: q.upvotes + 1 }).eq('id', q.id);
-                                setQuestions(qs => qs.map(x => x.id === q.id ? { ...x, upvotes: x.upvotes + 1 } : x));
+                                setUpvoting(q.id);
+                                const { error } = await supabase.from('questions').update({ upvotes: q.upvotes + 1 }).eq('id', q.id);
+                                if (!error) setQuestions(qs => qs.map(x => x.id === q.id ? { ...x, upvotes: x.upvotes + 1 } : x));
+                                setUpvoting(null);
                               }}
-                              className="material-symbols-outlined text-outline hover:text-primary text-sm transition-colors"
+                              className="material-symbols-outlined text-outline hover:text-primary text-sm transition-colors disabled:opacity-40"
                             >
                               arrow_upward
                             </button>
@@ -592,7 +623,7 @@ export default function CourseDetailPage() {
                           <span className="material-symbols-outlined text-outline text-sm transition-transform" style={{
                             transform: expandedQuestion === q.id ? 'rotate(180deg)' : 'rotate(0deg)'
                           }}>expand_more</span>
-                        </button>
+                        </div>
 
                         {expandedQuestion === q.id && (
                           <div className="border-t border-outline-variant/10 bg-white px-5 pb-5 pt-4 space-y-4">
@@ -727,18 +758,18 @@ export default function CourseDetailPage() {
                       <p className="text-xs text-primary font-medium">{instructor?.role === 'instructor' ? 'Lead Faculty' : 'Course Director'}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-on-surface-variant leading-relaxed mb-4">Specializing in the intersection of neural networks and aesthetic theory for over 12 years.</p>
+                  {instructor?.bio && <p className="text-sm text-on-surface-variant leading-relaxed mb-4">{instructor.bio}</p>}
                   <div className="flex gap-4 text-center">
                     <div>
-                      <p className="text-lg font-bold font-headline text-on-surface">4.9</p>
+                      <p className="text-lg font-bold font-headline text-on-surface">{avgRating || '—'}</p>
                       <p className="text-[10px] text-outline uppercase font-mono">Rating</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold font-headline text-on-surface">14</p>
+                      <p className="text-lg font-bold font-headline text-on-surface">{instructorStats.courses}</p>
                       <p className="text-[10px] text-outline uppercase font-mono">Courses</p>
                     </div>
                     <div>
-                      <p className="text-lg font-bold font-headline text-on-surface">34k</p>
+                      <p className="text-lg font-bold font-headline text-on-surface">{instructorStats.students.toLocaleString()}</p>
                       <p className="text-[10px] text-outline uppercase font-mono">Students</p>
                     </div>
                   </div>
