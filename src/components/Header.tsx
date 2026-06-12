@@ -23,6 +23,7 @@ export default function Header() {
   const navLinks = [
     { href: '/', label: t('nav.home'), icon: 'home' },
     { href: '/courses', label: t('nav.programs'), icon: 'school' },
+    { href: '/blog', label: 'Blog', icon: 'article' },
     { href: '/bidjobs', label: t('nav.bidjobs'), icon: 'work' },
     { href: '/scholarships', label: t('nav.scholarships'), icon: 'auto_awesome' },
     { href: '/support', label: t('nav.support'), icon: 'support_agent' },

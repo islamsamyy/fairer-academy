@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import AccessDenied from '@/components/AccessDenied';
 
-type Tab = 'overview' | 'users' | 'courses' | 'enrollments' | 'orders' | 'reviews' | 'certificates' | 'forum' | 'scholarships' | 'support' | 'broadcast';
+type Tab = 'overview' | 'users' | 'courses' | 'enrollments' | 'orders' | 'reviews' | 'certificates' | 'forum' | 'scholarships' | 'support' | 'broadcast' | 'blog';
 
 const ROLE_COLORS: Record<string, string> = {
   admin: 'bg-red-100 text-red-700',
@@ -93,6 +93,15 @@ export default function AdminDashboardPage() {
   const [bcTarget, setBcTarget] = useState<'all' | 'student' | 'instructor'>('all');
   const [bcSending, setBcSending] = useState(false);
   const [bcMsg, setBcMsg] = useState('');
+
+  // Blog tab
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [blogView, setBlogView] = useState<'list' | 'editor'>('list');
+  const [editingBlog, setEditingBlog] = useState<any | null>(null);
+  const [blogSaving, setBlogSaving] = useState(false);
+  const BLOG_CATEGORIES = ['General', 'Technology', 'Business', 'Design', 'Career', 'Announcement'];
+  const emptyBlog = { title: '', slug: '', excerpt: '', content: '', cover_url: '', category: 'General', tags: '', is_published: false };
+  const [blogForm, setBlogForm] = useState(emptyBlog);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -208,6 +217,14 @@ export default function AdminDashboardPage() {
     if (data) setMessages(data);
   }, []);
 
+  const loadBlogs = useCallback(async () => {
+    const { data } = await supabase
+      .from('blogs')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setBlogs(data);
+  }, []);
+
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -217,12 +234,12 @@ export default function AdminDashboardPage() {
       await Promise.all([
         loadOverview(), loadUsers(), loadCourses(), loadEnrollments(),
         loadOrders(), loadReviews(), loadCertificates(), loadThreads(),
-        loadScholarships(), loadMessages(),
+        loadScholarships(), loadMessages(), loadBlogs(),
       ]);
       setLoading(false);
     }
     init();
-  }, [router, loadOverview, loadUsers, loadCourses, loadEnrollments, loadOrders, loadReviews, loadCertificates, loadThreads, loadScholarships, loadMessages]);
+  }, [router, loadOverview, loadUsers, loadCourses, loadEnrollments, loadOrders, loadReviews, loadCertificates, loadThreads, loadScholarships, loadMessages, loadBlogs]);
 
   // ── Actions ──
   const changeUserRole = async (userId: string, newRole: string) => {
@@ -368,6 +385,83 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // ── Blog actions ──
+  const openNewBlog = () => {
+    setBlogForm(emptyBlog);
+    setEditingBlog(null);
+    setBlogView('editor');
+  };
+
+  const openEditBlog = (post: any) => {
+    setBlogForm({
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt || '',
+      content: post.content || '',
+      cover_url: post.cover_url || '',
+      category: post.category,
+      tags: (post.tags || []).join(', '),
+      is_published: post.is_published,
+    });
+    setEditingBlog(post);
+    setBlogView('editor');
+  };
+
+  const saveBlog = async () => {
+    if (!blogForm.title.trim() || !blogForm.slug.trim()) {
+      showToast('Title and slug are required', 'error'); return;
+    }
+    setBlogSaving(true);
+    const payload = {
+      title: blogForm.title.trim(),
+      slug: blogForm.slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      excerpt: blogForm.excerpt.trim() || null,
+      content: blogForm.content,
+      cover_url: blogForm.cover_url.trim() || null,
+      category: blogForm.category,
+      tags: blogForm.tags ? blogForm.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+      is_published: blogForm.is_published,
+    };
+    let error;
+    if (editingBlog) {
+      ({ error } = await supabase.from('blogs').update(payload).eq('id', editingBlog.id));
+    } else {
+      ({ error } = await supabase.from('blogs').insert(payload));
+    }
+    if (!error) {
+      await loadBlogs();
+      setBlogView('list');
+      showToast(editingBlog ? 'Post updated' : 'Post created');
+    } else {
+      showToast(error.message, 'error');
+    }
+    setBlogSaving(false);
+  };
+
+  const deleteBlog = async (id: string) => {
+    if (!confirm('Delete this post permanently?')) return;
+    setActionLoading(id);
+    const { error } = await supabase.from('blogs').delete().eq('id', id);
+    if (!error) {
+      setBlogs(bs => bs.filter(b => b.id !== id));
+      showToast('Post deleted');
+    } else showToast(error.message, 'error');
+    setActionLoading(null);
+  };
+
+  const toggleBlogPublish = async (id: string, current: boolean) => {
+    setActionLoading(id);
+    const { error } = await supabase.from('blogs').update({ is_published: !current }).eq('id', id);
+    if (!error) {
+      setBlogs(bs => bs.map(b => b.id === id ? { ...b, is_published: !current } : b));
+      showToast(!current ? 'Post published' : 'Post unpublished');
+    } else showToast(error.message, 'error');
+    setActionLoading(null);
+  };
+
+  const autoSlug = (title: string) =>
+    title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 80);
+
   const revokeCertificate = async (certId: string) => {
     if (!confirm('Revoke this certificate?')) return;
     setActionLoading(certId);
@@ -421,6 +515,7 @@ export default function AdminDashboardPage() {
     { id: 'scholarships', icon: 'volunteer_activism', label: 'Scholarships', badge: scholarships.length },
     { id: 'support', icon: 'inbox', label: 'Support', badge: stats.openTickets },
     { id: 'broadcast', icon: 'campaign', label: 'Broadcast' },
+    { id: 'blog', icon: 'article', label: 'Blog', badge: blogs.length },
   ];
 
   return (
@@ -1056,6 +1151,271 @@ export default function AdminDashboardPage() {
                     <p className="font-bold text-sm text-on-surface">{bcTitle || 'Title…'}</p>
                     <p className="text-sm text-on-surface-variant mt-0.5">{bcBody || 'Your message…'}</p>
                     {bcLink && <p className="text-xs text-primary font-bold mt-1">{bcLink}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── BLOG ── */}
+        {tab === 'blog' && (
+          <div>
+            {blogView === 'list' ? (
+              <>
+                {/* List header */}
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                  <h1 className="text-2xl font-bold text-on-surface">
+                    Blog Posts <span className="text-outline font-normal text-lg">({blogs.length})</span>
+                  </h1>
+                  <div className="flex items-center gap-3">
+                    <Link href="/blog" target="_blank" className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold hover:bg-slate-50 transition-colors flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">open_in_new</span> View Blog
+                    </Link>
+                    <button
+                      onClick={openNewBlog}
+                      className="px-5 py-2 rounded-xl bg-primary text-white text-sm font-bold hover:opacity-90 flex items-center gap-1 shadow-lg shadow-primary/20"
+                    >
+                      <span className="material-symbols-outlined text-sm">add</span> New Post
+                    </button>
+                  </div>
+                </div>
+
+                {/* Posts table */}
+                {blogs.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200/60 p-16 text-center">
+                    <span className="material-symbols-outlined text-6xl text-outline mb-4 block">article</span>
+                    <p className="text-outline font-medium mb-4">No blog posts yet</p>
+                    <button onClick={openNewBlog} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:opacity-90">Write your first post</button>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-xs text-outline uppercase tracking-wider bg-slate-50 border-b border-slate-100">
+                          <th className="text-left px-6 py-3">Title</th>
+                          <th className="text-left px-6 py-3">Category</th>
+                          <th className="text-left px-6 py-3">Views</th>
+                          <th className="text-left px-6 py-3">Status</th>
+                          <th className="text-left px-6 py-3">Date</th>
+                          <th className="text-left px-6 py-3">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {blogs.map(b => (
+                          <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <p className="font-medium text-on-surface line-clamp-1 max-w-xs">{b.title}</p>
+                              <p className="text-xs text-outline font-mono mt-0.5">/blog/{b.slug}</p>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary">{b.category}</span>
+                            </td>
+                            <td className="px-6 py-4 font-mono text-sm text-outline">{b.views.toLocaleString()}</td>
+                            <td className="px-6 py-4">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${b.is_published ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                {b.is_published ? 'Published' : 'Draft'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-outline text-xs font-mono">{new Date(b.created_at).toLocaleDateString()}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <button onClick={() => openEditBlog(b)} className="text-xs px-2 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-medium">Edit</button>
+                                <button onClick={() => toggleBlogPublish(b.id, b.is_published)} disabled={actionLoading === b.id} className="text-xs px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium disabled:opacity-50">
+                                  {b.is_published ? 'Unpublish' : 'Publish'}
+                                </button>
+                                {b.is_published && (
+                                  <Link href={`/blog/${b.slug}`} target="_blank" className="text-xs px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-medium">View</Link>
+                                )}
+                                <button onClick={() => deleteBlog(b.id)} disabled={actionLoading === b.id} className="text-xs px-2 py-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium disabled:opacity-50">Delete</button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* ── Editor ── */
+              <div>
+                <div className="flex items-center gap-4 mb-6">
+                  <button onClick={() => setBlogView('list')} className="flex items-center gap-1 text-outline hover:text-on-surface text-sm font-bold transition-colors">
+                    <span className="material-symbols-outlined text-sm">arrow_back</span> Back to posts
+                  </button>
+                  <h1 className="text-2xl font-bold text-on-surface">{editingBlog ? 'Edit Post' : 'New Post'}</h1>
+                  <div className="ml-auto flex items-center gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <div
+                        onClick={() => setBlogForm(f => ({ ...f, is_published: !f.is_published }))}
+                        className={`w-10 h-6 rounded-full transition-colors relative ${blogForm.is_published ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                      >
+                        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${blogForm.is_published ? 'translate-x-5' : 'translate-x-1'}`} />
+                      </div>
+                      <span className="text-sm font-bold">{blogForm.is_published ? 'Published' : 'Draft'}</span>
+                    </label>
+                    <button
+                      onClick={saveBlog}
+                      disabled={blogSaving}
+                      className="px-6 py-2.5 rounded-xl bg-primary text-white font-bold text-sm hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20"
+                    >
+                      <span className="material-symbols-outlined text-sm">save</span>
+                      {blogSaving ? 'Saving…' : 'Save Post'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  {/* Main editor */}
+                  <div className="xl:col-span-2 space-y-5">
+                    {/* Title */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Title *</label>
+                      <input
+                        value={blogForm.title}
+                        onChange={e => setBlogForm(f => ({
+                          ...f,
+                          title: e.target.value,
+                          slug: editingBlog ? f.slug : autoSlug(e.target.value),
+                        }))}
+                        placeholder="Your article title…"
+                        className="w-full text-2xl font-bold border-0 outline-none text-on-surface placeholder:text-outline/40 bg-transparent"
+                      />
+                    </div>
+
+                    {/* Excerpt */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Excerpt / Summary</label>
+                      <textarea
+                        value={blogForm.excerpt}
+                        onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))}
+                        placeholder="A short summary shown in the blog listing and SEO…"
+                        rows={3}
+                        className="w-full text-sm border-0 outline-none text-on-surface-variant placeholder:text-outline/40 bg-transparent resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Content */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-xs font-bold text-outline uppercase tracking-wider">Content *</label>
+                        <div className="flex items-center gap-1 text-[10px] text-outline font-mono bg-slate-50 px-2 py-1 rounded-lg">
+                          Supports Markdown · HTML
+                        </div>
+                      </div>
+                      {/* Toolbar */}
+                      <div className="flex flex-wrap gap-1 mb-3 pb-3 border-b border-slate-100">
+                        {[
+                          { label: 'H1', insert: '# ', title: 'Heading 1' },
+                          { label: 'H2', insert: '## ', title: 'Heading 2' },
+                          { label: 'H3', insert: '### ', title: 'Heading 3' },
+                          { label: 'B', insert: '**text**', title: 'Bold' },
+                          { label: 'I', insert: '*text*', title: 'Italic' },
+                          { label: '`', insert: '`code`', title: 'Inline code' },
+                          { label: '—', insert: '\n---\n', title: 'Divider' },
+                          { label: '>', insert: '> ', title: 'Blockquote' },
+                          { label: '• ', insert: '- ', title: 'List item' },
+                          { label: '🖼', insert: '![alt](url)', title: 'Image' },
+                          { label: '🔗', insert: '[text](url)', title: 'Link' },
+                        ].map(t => (
+                          <button
+                            key={t.label}
+                            title={t.title}
+                            onClick={() => setBlogForm(f => ({ ...f, content: f.content + t.insert }))}
+                            className="px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-200 hover:bg-slate-50 text-on-surface transition-colors"
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={blogForm.content}
+                        onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))}
+                        placeholder={`Write your article here…\n\nSupports Markdown:\n# Heading 1\n## Heading 2\n**bold** *italic* \`code\`\n> blockquote\n- list item\n\nOr paste raw HTML.`}
+                        rows={24}
+                        className="w-full text-sm border-0 outline-none text-on-surface placeholder:text-outline/30 bg-transparent resize-y leading-relaxed font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sidebar */}
+                  <div className="space-y-5">
+                    {/* Slug */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">URL Slug *</label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-outline font-mono">/blog/</span>
+                        <input
+                          value={blogForm.slug}
+                          onChange={e => setBlogForm(f => ({ ...f, slug: e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') }))}
+                          placeholder="my-article-slug"
+                          className="flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cover image */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Cover Image URL</label>
+                      <input
+                        value={blogForm.cover_url}
+                        onChange={e => setBlogForm(f => ({ ...f, cover_url: e.target.value }))}
+                        placeholder="https://…"
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      {blogForm.cover_url && (
+                        <div className="mt-3 aspect-video rounded-xl overflow-hidden bg-slate-100">
+                          <img src={blogForm.cover_url} alt="Cover preview" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Category */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Category</label>
+                      <select
+                        value={blogForm.category}
+                        onChange={e => setBlogForm(f => ({ ...f, category: e.target.value }))}
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        {BLOG_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                      </select>
+                    </div>
+
+                    {/* Tags */}
+                    <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-5">
+                      <label className="block text-xs font-bold text-outline uppercase tracking-wider mb-2">Tags <span className="text-outline/50 normal-case">(comma-separated)</span></label>
+                      <input
+                        value={blogForm.tags}
+                        onChange={e => setBlogForm(f => ({ ...f, tags: e.target.value }))}
+                        placeholder="e.g. react, tutorial, tips"
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      {blogForm.tags && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {blogForm.tags.split(',').filter(t => t.trim()).map(t => (
+                            <span key={t} className="px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-bold">#{t.trim()}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Live preview link */}
+                    {editingBlog?.is_published && (
+                      <Link href={`/blog/${blogForm.slug}`} target="_blank" className="block text-center w-full py-2.5 rounded-xl border border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-colors">
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">open_in_new</span>
+                        View Live Post
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={saveBlog}
+                      disabled={blogSaving}
+                      className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm hover:opacity-90 disabled:opacity-50 shadow-lg shadow-primary/20"
+                    >
+                      {blogSaving ? 'Saving…' : editingBlog ? 'Update Post' : 'Publish Post'}
+                    </button>
                   </div>
                 </div>
               </div>
