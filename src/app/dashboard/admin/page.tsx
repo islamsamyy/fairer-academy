@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import AccessDenied from '@/components/AccessDenied';
 
 type Tab = 'overview' | 'users' | 'courses' | 'enrollments' | 'orders' | 'reviews' | 'certificates' | 'forum' | 'scholarships' | 'support' | 'broadcast';
 
@@ -41,6 +42,7 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
@@ -210,8 +212,8 @@ export default function AdminDashboardPage() {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-      if (profile?.role !== 'admin') { router.push('/dashboard'); return; }
+      const { data: role } = await supabase.rpc('get_my_role');
+      if (role !== 'admin') { setAccessDenied(role || 'student'); setLoading(false); return; }
       await Promise.all([
         loadOverview(), loadUsers(), loadCourses(), loadEnrollments(),
         loadOrders(), loadReviews(), loadCertificates(), loadThreads(),
@@ -387,6 +389,8 @@ export default function AdminDashboardPage() {
       </div>
     </div>
   );
+
+  if (accessDenied) return <AccessDenied requiredRole="admin" currentRole={accessDenied} />;
 
   // Derived/filtered lists
   const filteredUsers = users.filter(u => {

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
+import AccessDenied from '@/components/AccessDenied';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -36,15 +37,17 @@ export default function InstructorDashboard() {
   const [courseFilter, setCourseFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [monthly, setMonthly] = useState<{ label: string; revenue: number; enrollments: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState<string | null>(null);
 
   useEffect(() => {
     async function getInitialData() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+      if (!user) { router.push('/login'); return; }
       setUser(user);
+
+      // Role guard — instructor or admin only
+      const { data: role } = await supabase.rpc('get_my_role');
+      if (role === 'student') { setAccessDenied(role); setLoading(false); return; }
 
       // Fetch Profile
       const { data: profileData } = await supabase
@@ -120,6 +123,8 @@ export default function InstructorDashboard() {
 
     getInitialData();
   }, [router]);
+
+  if (accessDenied) return <AccessDenied requiredRole="instructor" currentRole={accessDenied} />;
 
   const filteredCourses = courses.filter(c =>
     courseFilter === 'all' ? true : courseFilter === 'published' ? c.is_published : !c.is_published

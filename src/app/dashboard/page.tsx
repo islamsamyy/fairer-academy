@@ -44,6 +44,11 @@ function DashboardContent() {
       }
       setUser(user);
 
+      // Role guard — students only; redirect others to their dashboard
+      const { data: role } = await supabase.rpc('get_my_role');
+      if (role === 'admin') { router.replace('/dashboard/admin'); return; }
+      if (role === 'instructor') { router.replace('/dashboard/instructor'); return; }
+
       // Fetch Profile
       const { data: profileData } = await supabase
         .from('profiles')

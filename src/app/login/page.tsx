@@ -61,22 +61,12 @@ export default function LoginPage() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Fetch role from profile
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', authData.user.id)
-          .maybeSingle();
-
-        if (profileError) throw profileError;
-
-        const role = profile?.role || 'student';
-
-        // Redirect based on role
-        if (role === 'instructor') {
-          router.push('/dashboard/instructor');
-        } else if (role === 'admin') {
+        // Use RPC helper — single fast query, no RLS recursion
+        const { data: role } = await supabase.rpc('get_my_role');
+        if (role === 'admin') {
           router.push('/dashboard/admin');
+        } else if (role === 'instructor') {
+          router.push('/dashboard/instructor');
         } else {
           router.push('/dashboard');
         }
