@@ -2,7 +2,7 @@
 
 import { LanguageProvider } from '@/context/LanguageContext';
 import { CartProvider } from '@/context/CartContext';
-import HeaderWrapper from './HeaderWrapper';
+import HeaderWrapper from '@/components/layout/HeaderWrapper';
 import { ReactNode, useEffect, useState } from 'react';
 
 export default function ClientLayout({ children }: { children: ReactNode }) {

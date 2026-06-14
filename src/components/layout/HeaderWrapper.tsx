@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import Header from './Header';
+import Header from '@/components/layout/Header';
 
 const HIDDEN_ROUTES = ['/login', '/signup', '/support/chat'];
 
