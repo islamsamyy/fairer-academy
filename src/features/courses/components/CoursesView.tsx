@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { motion , Variants } from 'framer-motion';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
@@ -207,7 +206,6 @@ export default function CoursesView() {
           <header className="mb-12 flex flex-col xl:flex-row items-start xl:items-end justify-between gap-8 relative">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl">
               <div className="flex items-center gap-3 mb-5">
-                <Image src="/logo.png" alt="جامعة فايرير السعودية" width={40} height={40} className="drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]" />
                 <span className="text-xs font-mono font-bold text-primary tracking-widest uppercase">جامعة فايرير السعودية</span>
               </div>
               <div className="flex items-center gap-2 mb-4">
