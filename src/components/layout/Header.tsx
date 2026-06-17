@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { useCart } from '@/context/CartContext';
@@ -106,15 +105,6 @@ export default function Header() {
           {/* Logo + Brand */}
           <div className="flex items-center gap-3 sm:gap-8">
             <Link href="/" className="flex items-center gap-2.5 active:scale-95 transition-all group">
-              <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-cyan-400/10 border border-primary/15 group-hover:border-primary/40 transition-all duration-300">
-                <Image
-                  src="/logo.png"
-                  alt="جامعة فايرير السعودية"
-                  width={36}
-                  height={36}
-                  className="relative z-10 group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_10px_rgba(0,200,255,0.6)]"
-                />
-              </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-heading text-base font-black tracking-tight text-slate-900">
                   جامعة فايرير <span className="text-primary">السعودية</span>
