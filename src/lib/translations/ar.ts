@@ -3,7 +3,8 @@ const ar = {
   nav: {
     home: 'الرئيسية',
     programs: 'البرامج',
-    bidjobs: 'BidJobs',
+    bidjobs: 'مناقصات العمل',
+    blog: 'المدونة',
     scholarships: 'المنح الدراسية',
     support: 'الدعم',
     about: 'عن الأكاديمية',

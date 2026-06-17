@@ -4,6 +4,7 @@ const en = {
     home: 'Home',
     programs: 'Programs',
     bidjobs: 'BidJobs',
+    blog: 'Blog',
     scholarships: 'Scholarships',
     support: 'Support',
     about: 'About',
