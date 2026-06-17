@@ -105,10 +105,6 @@ export function HomeView() {
             className="relative z-10 px-6 sm:px-8 pt-20 pb-8 max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center gap-16"
           >
             <motion.div variants={fadeUp} className="w-full md:w-1/2 space-y-8">
-              <div className="flex items-center gap-3 mb-2">
-                <Image src="/logo.png" alt="جامعة فايرير السعودية" width={52} height={52} className="drop-shadow-[0_0_16px_rgba(0,200,255,0.6)] animate-float" />
-                <span className="font-heading font-black text-slate-700 text-sm tracking-tight">جامعة فايرير السعودية</span>
-              </div>
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-mono text-xs font-bold tracking-widest uppercase">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
