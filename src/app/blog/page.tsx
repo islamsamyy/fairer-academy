@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -48,6 +49,9 @@ export default function BlogPage() {
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-violet-400/15 rounded-full blur-[60px] animate-blob-delay pointer-events-none" />
         <div className="max-w-screen-xl mx-auto px-6 sm:px-8 relative z-10">
           <motion.div initial="hidden" animate="visible" variants={stagger} className="text-center mb-12">
+            <motion.div variants={fadeUp} className="flex justify-center mb-5">
+              <Image src="/logo.png" alt="جامعة فايرير السعودية" width={64} height={64} className="drop-shadow-[0_0_20px_rgba(0,200,255,0.55)] animate-float" />
+            </motion.div>
             <motion.span variants={fadeUp} className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold tracking-widest uppercase mb-4">
               جامعة فايرير السعودية
             </motion.span>

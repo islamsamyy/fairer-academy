@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
@@ -65,8 +66,8 @@ export default function ScholarshipsPage() {
     <div className="bg-surface min-h-[calc(100vh-64px)] px-4 py-20">
       <div className="max-w-5xl mx-auto">
         <motion.header initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
-          <div className="w-20 h-20 bg-primary/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <span className="material-symbols-outlined text-primary text-4xl">auto_awesome</span>
+          <div className="flex justify-center mb-5">
+            <Image src="/logo.png" alt="جامعة فايرير السعودية" width={64} height={64} className="drop-shadow-[0_0_16px_rgba(0,200,255,0.5)] animate-float" />
           </div>
           <h1 className="text-4xl font-headline font-bold tracking-tight text-on-surface mb-3">{t('scholarships.title') || 'Scholarships'}</h1>
           <p className="text-on-surface-variant text-lg max-w-2xl mx-auto">{t('scholarships.subtitle') || 'Funded opportunities to accelerate your learning. Apply below.'}</p>

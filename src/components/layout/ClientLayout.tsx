@@ -3,6 +3,7 @@
 import { LanguageProvider } from '@/context/LanguageContext';
 import { CartProvider } from '@/context/CartContext';
 import HeaderWrapper from '@/components/layout/HeaderWrapper';
+import Footer from '@/components/layout/Footer';
 import { ReactNode, useEffect, useState } from 'react';
 
 export default function ClientLayout({ children }: { children: ReactNode }) {
@@ -17,6 +18,7 @@ export default function ClientLayout({ children }: { children: ReactNode }) {
       <CartProvider>
         {mounted && <HeaderWrapper />}
         {children}
+        {mounted && <Footer />}
       </CartProvider>
     </LanguageProvider>
   );
