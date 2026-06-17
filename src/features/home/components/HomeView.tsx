@@ -42,10 +42,10 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
 // categories array moved inside component to access t()
 
 const testimonials = [
-  { name: 'Sara Al-Harbi', role: 'Software Engineer @ STC', avatar: '👩‍💻', quote: 'I landed my dream job 3 months after completing the Full-Stack track. The quality rivals any international platform.', xp: 4820, badge: '🏆 Top Graduate' },
-  { name: 'Mohammed Al-Qahtani', role: 'Product Designer @ Noon', avatar: '👨‍🎨', quote: 'The UI/UX course was taught by real industry professionals. My portfolio went from zero to hired in 8 weeks.', xp: 3650, badge: '🎨 Design Pro' },
-  { name: 'Fatima Al-Zahrani', role: 'Data Analyst @ Aramco', avatar: '👩‍🔬', quote: 'Arabic-first content made it so much easier. I went through 3 data courses and each felt world-class.', xp: 5100, badge: '📊 Data Star' },
-  { name: 'Omar Al-Dosari', role: 'Entrepreneur', avatar: '🧑‍💼', quote: 'The business + legal track gave me everything I needed to launch my startup. Highly recommend the mentorship add-on.', xp: 2900, badge: '🚀 Founder' },
+  { nameEn: 'Sara Al-Harbi', nameAr: 'سارة الحربي', role: 'Software Engineer @ STC', avatar: '👩‍💻', quoteEn: 'I landed my dream job 3 months after completing the Full-Stack track. The quality rivals any international platform.', quoteAr: 'حصلت على وظيفة أحلامي بعد 3 أشهر من إكمال مسار Full-Stack. الجودة تنافس أي منصة عالمية.', xp: 4820, badge: '🏆 Top Graduate' },
+  { nameEn: 'Mohammed Al-Qahtani', nameAr: 'محمد القحطاني', role: 'Product Designer @ Noon', avatar: '👨‍🎨', quoteEn: 'The UI/UX course was taught by real industry professionals. My portfolio went from zero to hired in 8 weeks.', quoteAr: 'تم تدريس دورة UI/UX من قبل محترفين حقيقيين في الصناعة. حقيبتي تطورت من الصفر للتوظيف في 8 أسابيع.', xp: 3650, badge: '🎨 Design Pro' },
+  { nameEn: 'Fatima Al-Zahrani', nameAr: 'فاطمة الزهراني', role: 'Data Analyst @ Aramco', avatar: '👩‍🔬', quoteEn: 'Arabic-first content made it so much easier. I went through 3 data courses and each felt world-class.', quoteAr: 'المحتوى باللغة العربية أولاً جعل الأمر أسهل بكثير. مررت بـ 3 دورات بيانات وكل واحدة كانت عالمية المستوى.', xp: 5100, badge: '📊 Data Star' },
+  { nameEn: 'Omar Al-Dosari', nameAr: 'عمر الدوسري', role: 'Entrepreneur', avatar: '🧑‍💼', quoteEn: 'The business + legal track gave me everything I needed to launch my startup. Highly recommend the mentorship add-on.', quoteAr: 'مسار الأعمال والقانون أعطاني كل ما احتاجه لإطلاق شركتي الناشئة. أوصي بشدة ببرنامج الإرشاد الإضافي.', xp: 2900, badge: '🚀 Founder' },
 ];
 
 const leaderboard = [
@@ -74,7 +74,7 @@ const tickerItems = [
 ];
 
 export function HomeView() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
   const categories = [
@@ -333,8 +333,8 @@ export function HomeView() {
                     <div className="glass-dark rounded-3xl p-10 max-w-2xl mx-auto text-center">
                       <div className="text-6xl mb-4">{testimonial.avatar}</div>
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-mono font-bold mb-4">{testimonial.badge}</div>
-                      <p className="text-white/90 text-lg leading-relaxed italic mb-6">"{testimonial.quote}"</p>
-                      <p className="font-heading font-black text-white text-xl">{testimonial.name}</p>
+                      <p className="text-white/90 text-lg leading-relaxed italic mb-6">"{language === 'ar' ? testimonial.quoteAr : testimonial.quoteEn}"</p>
+                      <p className="font-heading font-black text-white text-xl">{language === 'ar' ? testimonial.nameAr : testimonial.nameEn}</p>
                       <p className="text-white/50 text-sm font-mono mt-1">{testimonial.role}</p>
                       <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full">
                         <span className="material-symbols-outlined text-yellow-400 text-sm">stars</span>
