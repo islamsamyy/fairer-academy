@@ -172,12 +172,12 @@ export default function SignupForm() {
 
               {/* Full Name Input */}
               <motion.div variants={itemVariants} className="space-y-2">
-                <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="fullName">
+                <label className="block text-sm font-semibold text-on-surface-variant ms-1" htmlFor="fullName">
                   {t('signup.fullNameLabel')}
                 </label>
                 <div className="relative group">
                   <input
-                    className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
+                    className="w-full h-14 ps-12 pe-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
                     id="fullName"
                     name="fullName"
                     placeholder={t('signup.fullNamePlaceholder')}
@@ -185,7 +185,7 @@ export default function SignupForm() {
                     required
                   />
                   <span
-                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
+                    className="absolute start-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
                     data-icon="person"
                   >
                     person
@@ -195,12 +195,12 @@ export default function SignupForm() {
 
               {/* National ID Input */}
               <motion.div variants={itemVariants} className="space-y-2">
-                <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="nationalId">
+                <label className="block text-sm font-semibold text-on-surface-variant ms-1" htmlFor="nationalId">
                   {t('signup.nationalIdLabel')}
                 </label>
                 <div className="relative group">
                   <input
-                    className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
+                    className="w-full h-14 ps-12 pe-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
                     id="nationalId"
                     name="nationalId"
                     placeholder={t('signup.nationalIdPlaceholder')}
@@ -211,7 +211,7 @@ export default function SignupForm() {
                     required
                   />
                   <span
-                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
+                    className="absolute start-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
                     data-icon="id_card"
                   >
                     id_card
@@ -221,20 +221,20 @@ export default function SignupForm() {
 
               {/* Email Input */}
               <motion.div variants={itemVariants} className="space-y-2">
-                <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="email">
+                <label className="block text-sm font-semibold text-on-surface-variant ms-1" htmlFor="email">
                   {t('signup.emailLabel')}
                 </label>
                 <div className="relative group">
                   <input
-                    className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
+                    className="w-full h-14 ps-12 pe-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
                     id="email"
                     name="email"
-                    placeholder="alex@ethereal.edu"
+                    placeholder="your@email.com"
                     type="email"
                     required
                   />
                   <span
-                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
+                    className="absolute start-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
                     data-icon="mail"
                   >
                     mail
@@ -244,12 +244,12 @@ export default function SignupForm() {
 
               {/* Password Input + Strength */}
               <motion.div variants={itemVariants} className="space-y-3">
-                <label className="block text-sm font-semibold text-on-surface-variant ml-1" htmlFor="password">
+                <label className="block text-sm font-semibold text-on-surface-variant ms-1" htmlFor="password">
                   {t('signup.passwordLabel')}
                 </label>
                 <div className="relative group">
                   <input
-                    className="w-full h-14 px-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
+                    className="w-full h-14 ps-12 pe-5 bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary/40 transition-all duration-300 outline-none text-on-surface hover:bg-surface-container/80"
                     id="password"
                     name="password"
                     placeholder="••••••••••••"
@@ -257,7 +257,7 @@ export default function SignupForm() {
                     required
                   />
                   <span
-                    className="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
+                    className="absolute start-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline-variant group-focus-within:text-primary transition-colors pointer-events-none"
                     data-icon="lock"
                   >
                     lock
