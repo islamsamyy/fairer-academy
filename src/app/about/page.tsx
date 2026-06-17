@@ -28,18 +28,6 @@ function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
   return <span ref={ref}>{val.toLocaleString()}{suffix}</span>;
 }
 
-const values = [
-  { icon: 'star', label: 'Excellence', body: 'We hold every course to the standard of the best institutions in the world.', color: 'from-amber-400 to-orange-500' },
-  { icon: 'diversity_3', label: 'Inclusion', body: 'Education is a right, not a privilege. We make quality learning accessible to all.', color: 'from-primary to-cyan-500' },
-  { icon: 'verified', label: 'Integrity', body: 'Every certificate, every credential, every instructor — verified and trusted.', color: 'from-emerald-400 to-teal-500' },
-  { icon: 'rocket_launch', label: 'Innovation', body: 'We build the tools and experiences that put Saudi learners ahead of the curve.', color: 'from-violet-500 to-purple-700' },
-];
-
-const team = [
-  { name: 'Dr. Abdullah Al-Faisal', role: 'Founder & CEO', avatar: '👨‍💼', bio: 'Former Stanford professor, 20 years in EdTech' },
-  { name: 'Eng. Reem Al-Shammari', role: 'Chief Academic Officer', avatar: '👩‍🔬', bio: 'MIT graduate, curriculum design expert' },
-  { name: 'Dr. Khalid Al-Mutairi', role: 'Head of Technology', avatar: '👨‍💻', bio: 'Ex-Google, 15 years in platform engineering' },
-];
 
 type PBlock =
   | { t: 'h'; c: string }
@@ -319,6 +307,19 @@ export default function AboutPage() {
   const { t } = useLanguage();
   const [activePolicyTab, setActivePolicyTab] = useState('att');
 
+  const values = [
+    { icon: 'star', label: t('about.val1Label'), body: t('about.val1Body'), color: 'from-amber-400 to-orange-500' },
+    { icon: 'diversity_3', label: t('about.val2Label'), body: t('about.val2Body'), color: 'from-primary to-cyan-500' },
+    { icon: 'verified', label: t('about.val3Label'), body: t('about.val3Body'), color: 'from-emerald-400 to-teal-500' },
+    { icon: 'rocket_launch', label: t('about.val4Label'), body: t('about.val4Body'), color: 'from-violet-500 to-purple-700' },
+  ];
+
+  const team = [
+    { name: t('about.team1Name'), role: t('about.team1Role'), avatar: '👨‍💼', bio: t('about.team1Bio') },
+    { name: t('about.team2Name'), role: t('about.team2Role'), avatar: '🤝', bio: t('about.team2Bio') },
+    { name: t('about.team3Name'), role: t('about.team3Role'), avatar: '👨‍💻', bio: t('about.team3Bio') },
+  ];
+
   return (
     <div className="min-h-screen overflow-x-hidden">
 
@@ -345,10 +346,10 @@ export default function AboutPage() {
       <section className="px-6 sm:px-8 py-16 max-w-screen-xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { to: 28000, suffix: '+', label: 'Learners enrolled', icon: 'groups', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-            { to: 320, suffix: '+', label: 'Expert instructors', icon: 'school', color: 'text-violet-600', bg: 'bg-violet-50' },
-            { to: 480, suffix: '+', label: 'Courses available', icon: 'menu_book', color: 'text-primary', bg: 'bg-primary/5' },
-            { to: 94, suffix: '%', label: 'Graduate employment', icon: 'work', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { to: 28000, suffix: '+', label: t('about.statLearners'), icon: 'groups', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+            { to: 320, suffix: '+', label: t('about.statInstructors'), icon: 'school', color: 'text-violet-600', bg: 'bg-violet-50' },
+            { to: 480, suffix: '+', label: t('about.statCourses'), icon: 'menu_book', color: 'text-primary', bg: 'bg-primary/5' },
+            { to: 94, suffix: '%', label: t('about.statJobs'), icon: 'work', color: 'text-emerald-600', bg: 'bg-emerald-50' },
           ].map((s, i) => (
             <motion.div
               key={s.label}
@@ -401,8 +402,8 @@ export default function AboutPage() {
       {/* ── OUR VALUES ── */}
       <section className="px-6 sm:px-8 py-20 max-w-screen-xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-12 text-center">
-          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">What We Stand For</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">Our Core Values</motion.h2>
+          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">{t('about.valuesTag')}</motion.p>
+          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">{t('about.valuesTitle')}</motion.h2>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {values.map((v, i) => (
@@ -431,20 +432,20 @@ export default function AboutPage() {
         <div className="max-w-screen-xl mx-auto px-6 sm:px-8 relative z-10">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-12">
             <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 text-white/70 font-mono text-xs font-bold tracking-widest uppercase mb-4">
-              🇸🇦 Vision 2030 Partner
+              🇸🇦 {t('about.visionBadge')}
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-4xl lg:text-5xl font-heading font-black text-white tracking-tighter leading-tight mb-4">
-              Powering Saudi Arabia's <span className="gradient-text">Knowledge Economy</span>
+              <span className="gradient-text">{t('about.visionTitle')}</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-white/60 text-lg max-w-2xl mx-auto font-light">
-              جامعة فايرير السعودية is proud to be aligned with Vision 2030 goals — building the next generation of Saudi talent.
+              {t('about.visionBody')}
             </motion.p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
-              { icon: 'school', title: 'Quality Education', body: 'World-class curriculum built with Saudi context at its core.' },
-              { icon: 'work', title: 'Job Readiness', body: '94% of graduates find employment within 6 months of completing their track.' },
-              { icon: 'public', title: 'Global Standards', body: 'Internationally recognized certificates that open doors worldwide.' },
+              { icon: 'school', title: t('about.vision1Title'), body: t('about.vision1Body') },
+              { icon: 'work', title: t('about.vision2Title'), body: t('about.vision2Body') },
+              { icon: 'public', title: t('about.vision3Title'), body: t('about.vision3Body') },
             ].map((p, i) => (
               <motion.div
                 key={p.title}
@@ -466,8 +467,8 @@ export default function AboutPage() {
       {/* ── LEADERSHIP TEAM ── */}
       <section className="px-6 sm:px-8 py-20 max-w-screen-xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-12 text-center">
-          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">The People Behind It</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">Leadership Team</motion.h2>
+          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">{t('about.teamTag')}</motion.p>
+          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">{t('about.teamTitle')}</motion.h2>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {team.map((member, i) => (
@@ -492,9 +493,9 @@ export default function AboutPage() {
       {/* ── ACADEMIC POLICIES ── */}
       <section className="px-6 sm:px-8 py-20 max-w-screen-xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-10 text-center">
-          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">Official Documents</motion.p>
-          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">اللوائح والسياسات الأكاديمية</motion.h2>
-          <motion.p variants={fadeUp} className="text-muted-foreground mt-3 text-sm">رقم الرخصة: 212001000270 | تبوك، المملكة العربية السعودية | 1447هـ — 2026م</motion.p>
+          <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">{t('about.policiesTag')}</motion.p>
+          <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">{t('about.policiesTitle')}</motion.h2>
+          <motion.p variants={fadeUp} className="text-muted-foreground mt-3 text-sm">{t('about.policiesSubtitle')}</motion.p>
         </motion.div>
 
         <div className="flex flex-wrap gap-2 mb-6 justify-center">
@@ -571,7 +572,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,217,255,0.08),transparent_70%)] pointer-events-none" />
           <div className="relative z-10 space-y-6">
             <h2 className="text-4xl font-heading font-black text-on-background tracking-tight">{t('about.ctaTitle')}</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Start your learning journey today and become part of a growing Saudi success story.</p>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">{t('about.ctaBody')}</p>
             <div className="flex flex-wrap justify-center gap-4 pt-2">
               <Link href="/courses" className="px-10 py-4 bg-primary text-white rounded-2xl font-heading font-black hover:scale-105 transition-transform shadow-xl shadow-primary/25">{t('about.ctaExplore')}</Link>
               <Link href="/support/contact" className="px-10 py-4 glass-glow rounded-2xl font-heading font-black hover:bg-white transition-all">{t('about.ctaContact')}</Link>
