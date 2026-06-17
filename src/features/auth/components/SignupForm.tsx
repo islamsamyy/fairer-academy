@@ -5,7 +5,6 @@ import { motion , Variants } from 'framer-motion';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { useLanguage } from '@/context/LanguageContext';
 
 const containerVariants: Variants = {
@@ -115,17 +114,6 @@ export default function SignupForm() {
           <div className="p-8 md:p-12">
             {/* Brand Header */}
             <motion.header variants={itemVariants} className="mb-10 text-center">
-              <div className="inline-flex items-center justify-center mb-6">
-                <Link href="/" className="h-12 flex items-center justify-center cursor-pointer outline-none">
-                    <Image
-                      src="/logo.png"
-                      alt="جامعة فايرير السعودية"
-                      width={48}
-                      height={48}
-                      className="h-12 w-auto object-contain hover:scale-105 transition-transform duration-300"
-                    />
-                </Link>
-              </div>
               <h1 className="font-headline text-4xl font-bold tracking-tight text-on-background mb-2">
                 جامعة فايرير السعودية
               </h1>
