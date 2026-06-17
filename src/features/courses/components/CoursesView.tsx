@@ -158,8 +158,8 @@ export default function CoursesView() {
                 <div>
                   <span className={`text-sm font-bold transition-colors ${
                     freeOnly ? 'text-emerald-600' : 'text-slate-600 group-hover:text-primary'
-                  }`}>Free Programs Only</span>
-                  <p className="text-[10px] text-slate-400 font-mono">Zero cost enrollment</p>
+                  }`}>{t('courses.freeOnly')}</span>
+                  <p className="text-[10px] text-slate-400 font-mono">{t('courses.freeOnlyDesc')}</p>
                 </div>
               </label>
             </div>
@@ -168,7 +168,7 @@ export default function CoursesView() {
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-on-surface-variant uppercase tracking-wider font-mono">{t('courses.complexityLabel')}</h3>
               <div className="space-y-3">
-                {['beginner', 'intermediate', 'advanced'].map((level) => (
+                {(['beginner', 'intermediate', 'advanced'] as const).map((level) => (
                   <button
                     key={level}
                     onClick={() => setSelectedComplexity(selectedComplexity === level ? '' : level)}
@@ -178,7 +178,7 @@ export default function CoursesView() {
                         : 'hover:bg-white/50 text-slate-500'
                     }`}
                   >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                    {t(`courses.level${level.charAt(0).toUpperCase()}${level.slice(1)}` as any)}
                     {selectedComplexity === level && <span className="material-symbols-outlined text-sm">check_circle</span>}
                   </button>
                 ))}
@@ -254,8 +254,8 @@ export default function CoursesView() {
             ) : fetchError ? (
               <div className="col-span-full py-20 text-center">
                 <span className="material-symbols-outlined text-destructive text-6xl mb-4">error</span>
-                <p className="text-on-surface-variant font-medium mb-4">Something went wrong loading courses. Please try again.</p>
-                <button onClick={() => window.location.reload()} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors">Retry</button>
+                <p className="text-on-surface-variant font-medium mb-4">{t('courses.loadError')}</p>
+                <button onClick={() => window.location.reload()} className="px-6 py-3 bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors">{t('courses.retry')}</button>
               </div>
             ) : courses.length === 0 ? (
               <div className="col-span-full py-20 text-center">
@@ -277,7 +277,7 @@ export default function CoursesView() {
                       </span>
                       {course.price === 0 && (
                         <span className="bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-emerald-500/30 animate-pulse">
-                          FREE
+                          {t('courses.freeBadge')}
                         </span>
                       )}
                     </div>
@@ -299,7 +299,7 @@ export default function CoursesView() {
                       <div>
                         <span className="text-[10px] text-slate-400 uppercase font-mono block mb-1">{t('courses.tuitionLabel')}</span>
                         <span className={`text-xl font-heading font-bold ${course.price === 0 ? 'text-emerald-600' : 'text-on-surface'}`}>
-                          {course.price === 0 ? 'Free' : `$${course.price}`}
+                          {course.price === 0 ? t('courses.free') : `$${course.price}`}
                         </span>
                       </div>
                       <Link href={`/courses/${course.id}`} className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
@@ -307,7 +307,7 @@ export default function CoursesView() {
                           ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-500 hover:text-white'
                           : 'bg-surface-container-low text-primary hover:bg-primary hover:text-white'
                       }`}>
-                        {course.price === 0 ? 'Enroll Free' : t('courses.viewCourse')}
+                        {course.price === 0 ? t('courses.enrollFree') : t('courses.viewCourse')}
                       </Link>
                     </div>
                   </div>
