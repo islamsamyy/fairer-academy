@@ -39,14 +39,7 @@ function AnimatedCounter({ value, suffix = '' }: { value: number; suffix?: strin
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
 }
 
-const categories = [
-  { icon: 'code', label: 'Technology', color: 'from-cyan-500 to-blue-600', count: '142 courses' },
-  { icon: 'business_center', label: 'Business', color: 'from-violet-500 to-purple-700', count: '98 courses' },
-  { icon: 'palette', label: 'Design', color: 'from-pink-500 to-rose-600', count: '76 courses' },
-  { icon: 'translate', label: 'Languages', color: 'from-amber-500 to-orange-600', count: '54 courses' },
-  { icon: 'leaderboard', label: 'Leadership', color: 'from-emerald-500 to-teal-600', count: '41 courses' },
-  { icon: 'analytics', label: 'Data Science', color: 'from-indigo-500 to-blue-700', count: '63 courses' },
-];
+// categories array moved inside component to access t()
 
 const testimonials = [
   { name: 'Sara Al-Harbi', role: 'Software Engineer @ STC', avatar: '👩‍💻', quote: 'I landed my dream job 3 months after completing the Full-Stack track. The quality rivals any international platform.', xp: 4820, badge: '🏆 Top Graduate' },
@@ -83,6 +76,15 @@ const tickerItems = [
 export function HomeView() {
   const { t } = useLanguage();
   const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  const categories = [
+    { icon: 'code', slug: 'Technology', label: t('home.catTech'), color: 'from-cyan-500 to-blue-600', count: `142 ${t('home.catCourses')}` },
+    { icon: 'business_center', slug: 'Business', label: t('home.catBusiness'), color: 'from-violet-500 to-purple-700', count: `98 ${t('home.catCourses')}` },
+    { icon: 'palette', slug: 'Design', label: t('home.catDesign'), color: 'from-pink-500 to-rose-600', count: `76 ${t('home.catCourses')}` },
+    { icon: 'translate', slug: 'Languages', label: t('home.catLanguages'), color: 'from-amber-500 to-orange-600', count: `54 ${t('home.catCourses')}` },
+    { icon: 'leaderboard', slug: 'Leadership', label: t('home.catLeadership'), color: 'from-emerald-500 to-teal-600', count: `41 ${t('home.catCourses')}` },
+    { icon: 'analytics', slug: 'Data Science', label: t('home.catDataScience'), color: 'from-indigo-500 to-blue-700', count: `63 ${t('home.catCourses')}` },
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => setActiveTestimonial(p => (p + 1) % testimonials.length), 4000);
@@ -250,13 +252,13 @@ export function HomeView() {
                 <span className="material-symbols-outlined text-white text-3xl">school</span>
               </div>
               <div>
-                <p className="text-white/80 text-xs font-mono font-bold uppercase tracking-widest mb-1">Limited time offer</p>
-                <h3 className="text-white text-2xl font-heading font-black">3 Full Scholarships Available</h3>
-                <p className="text-white/80 text-sm mt-1">Cover your full tuition — apply before seats run out</p>
+                <p className="text-white/80 text-xs font-mono font-bold uppercase tracking-widest mb-1">{t('home.scholarshipBannerTag')}</p>
+                <h3 className="text-white text-2xl font-heading font-black">{t('home.scholarshipBannerTitle')}</h3>
+                <p className="text-white/80 text-sm mt-1">{t('home.scholarshipBannerBody')}</p>
               </div>
             </div>
             <Link href="/scholarships" className="relative z-10 flex-shrink-0 px-8 py-3 bg-white text-primary font-heading font-black rounded-xl uppercase tracking-widest hover:scale-105 transition-transform shadow-lg">
-              Apply Now
+              {t('home.scholarshipBannerCta')}
             </Link>
           </motion.div>
         </section>
@@ -264,8 +266,8 @@ export function HomeView() {
         {/* ── COURSE CATEGORIES ── */}
         <section className="px-6 sm:px-8 py-20 max-w-screen-2xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-10">
-            <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">Explore by Category</motion.p>
-            <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">Find Your Path</motion.h2>
+            <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">{t('home.categoriesTag')}</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight text-on-background">{t('home.categoriesTitle')}</motion.h2>
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.map((cat, i) => (
@@ -277,7 +279,7 @@ export function HomeView() {
                 transition={{ delay: i * 0.08 }}
                 whileHover={{ y: -6, scale: 1.03 }}
               >
-                <Link href={`/courses?category=${encodeURIComponent(cat.label)}`} className="block glass-glow rounded-2xl p-5 text-center group">
+                <Link href={`/courses?category=${encodeURIComponent(cat.slug)}`} className="block glass-glow rounded-2xl p-5 text-center group">
                   <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg`}>
                     <span className="material-symbols-outlined text-white text-2xl">{cat.icon}</span>
                   </div>
@@ -318,25 +320,25 @@ export function HomeView() {
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(0,217,255,0.08),transparent_60%)] pointer-events-none" />
           <div className="px-6 sm:px-8 max-w-screen-2xl mx-auto relative z-10">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-12 text-center">
-              <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-secondary tracking-widest uppercase mb-2">Success Stories</motion.p>
-              <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black text-white tracking-tight">Our Graduates Are Thriving</motion.h2>
+              <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-secondary tracking-widest uppercase mb-2">{t('home.testimonialsTag')}</motion.p>
+              <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black text-white tracking-tight">{t('home.testimonialsTitle')}</motion.h2>
             </motion.div>
             <div className="relative overflow-hidden">
               <div
                 className="flex transition-transform duration-700 ease-in-out"
                 style={{ transform: `translateX(-${activeTestimonial * 100}%)` }}
               >
-                {testimonials.map((t, i) => (
+                {testimonials.map((testimonial, i) => (
                   <div key={i} className="w-full flex-shrink-0 px-4">
                     <div className="glass-dark rounded-3xl p-10 max-w-2xl mx-auto text-center">
-                      <div className="text-6xl mb-4">{t.avatar}</div>
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-mono font-bold mb-4">{t.badge}</div>
-                      <p className="text-white/90 text-lg leading-relaxed italic mb-6">"{t.quote}"</p>
-                      <p className="font-heading font-black text-white text-xl">{t.name}</p>
-                      <p className="text-white/50 text-sm font-mono mt-1">{t.role}</p>
+                      <div className="text-6xl mb-4">{testimonial.avatar}</div>
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs font-mono font-bold mb-4">{testimonial.badge}</div>
+                      <p className="text-white/90 text-lg leading-relaxed italic mb-6">"{testimonial.quote}"</p>
+                      <p className="font-heading font-black text-white text-xl">{testimonial.name}</p>
+                      <p className="text-white/50 text-sm font-mono mt-1">{testimonial.role}</p>
                       <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full">
                         <span className="material-symbols-outlined text-yellow-400 text-sm">stars</span>
-                        <span className="text-white/70 text-xs font-mono font-bold">{t.xp.toLocaleString()} XP earned</span>
+                        <span className="text-white/70 text-xs font-mono font-bold">{testimonial.xp.toLocaleString()} {t('home.xpEarned')}</span>
                       </div>
                     </div>
                   </div>
@@ -356,8 +358,8 @@ export function HomeView() {
         {/* ── LEADERBOARD ── */}
         <section className="px-6 sm:px-8 py-24 max-w-screen-2xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-12">
-            <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-accent tracking-widest uppercase mb-2">Weekly Rankings</motion.p>
-            <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight">Top Learners This Week</motion.h2>
+            <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-accent tracking-widest uppercase mb-2">{t('home.leaderboardTag')}</motion.p>
+            <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight">{t('home.leaderboardTitle')}</motion.h2>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-3">
@@ -401,29 +403,29 @@ export function HomeView() {
               viewport={{ once: true }}
               className="glass-glow rounded-3xl p-8 flex flex-col items-center justify-center gap-4"
             >
-              <p className="text-xs font-mono font-bold text-primary tracking-widest uppercase">Earn XP by completing courses</p>
+              <p className="text-xs font-mono font-bold text-primary tracking-widest uppercase">{t('home.earnXP')}</p>
               <div className="flex items-end gap-4 mt-4">
                 <div className="text-center">
                   <div className="text-4xl mb-2">🥈</div>
                   <div className="w-20 h-24 bg-gradient-to-b from-slate-300 to-slate-400 rounded-t-2xl flex items-end justify-center pb-3">
-                    <span className="text-white font-mono text-xs font-black">2nd</span>
+                    <span className="text-white font-mono text-xs font-black">{t('home.rank2')}</span>
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl mb-2 animate-float">🥇</div>
                   <div className="w-20 h-32 bg-gradient-to-b from-primary to-cyan-600 rounded-t-2xl flex items-end justify-center pb-3 shadow-lg shadow-primary/30">
-                    <span className="text-white font-mono text-xs font-black">1st</span>
+                    <span className="text-white font-mono text-xs font-black">{t('home.rank1')}</span>
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl mb-2">🥉</div>
                   <div className="w-20 h-16 bg-gradient-to-b from-amber-500 to-orange-600 rounded-t-2xl flex items-end justify-center pb-3">
-                    <span className="text-white font-mono text-xs font-black">3rd</span>
+                    <span className="text-white font-mono text-xs font-black">{t('home.rank3')}</span>
                   </div>
                 </div>
               </div>
               <Link href="/courses" className="mt-6 px-8 py-3 bg-primary text-white rounded-xl font-heading font-bold text-sm uppercase tracking-widest hover:scale-105 transition-transform">
-                Join the Competition
+                {t('home.joinCompetition')}
               </Link>
             </motion.div>
           </div>
@@ -433,8 +435,8 @@ export function HomeView() {
         <section className="px-6 sm:px-8 py-24 bg-gradient-to-b from-slate-50 to-white">
           <div className="max-w-screen-2xl mx-auto">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="mb-12 text-center">
-              <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">World-Class Faculty</motion.p>
-              <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight">Learn From the Best</motion.h2>
+              <motion.p variants={fadeUp} className="text-xs font-mono font-bold text-primary tracking-widest uppercase mb-2">{t('home.facultyTag')}</motion.p>
+              <motion.h2 variants={fadeUp} className="text-4xl font-heading font-black tracking-tight">{t('home.facultyTitle')}</motion.h2>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {instructors.map((inst, i) => (
@@ -453,21 +455,21 @@ export function HomeView() {
                   <div className="flex justify-center gap-6 mb-6">
                     <div className="text-center">
                       <p className="font-heading font-black text-2xl text-on-background">{inst.courses}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono uppercase">Courses</p>
+                      <p className="text-[10px] text-muted-foreground font-mono uppercase">{t('home.instCourses')}</p>
                     </div>
                     <div className="w-px bg-border" />
                     <div className="text-center">
                       <p className="font-heading font-black text-2xl text-on-background">{inst.students}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono uppercase">Students</p>
+                      <p className="text-[10px] text-muted-foreground font-mono uppercase">{t('home.instStudents')}</p>
                     </div>
                     <div className="w-px bg-border" />
                     <div className="text-center">
                       <p className="font-heading font-black text-2xl text-yellow-500">⭐{inst.rating}</p>
-                      <p className="text-[10px] text-muted-foreground font-mono uppercase">Rating</p>
+                      <p className="text-[10px] text-muted-foreground font-mono uppercase">{t('home.instRating')}</p>
                     </div>
                   </div>
                   <Link href="/courses" className="block w-full py-2.5 rounded-xl border-2 border-primary/20 text-primary font-heading font-bold text-sm hover:bg-primary hover:text-white transition-all">
-                    View Courses
+                    {t('home.viewCourses')}
                   </Link>
                 </motion.div>
               ))}
@@ -538,7 +540,7 @@ export function HomeView() {
                 <div className={`w-20 h-20 bg-gradient-to-br ${s.color} text-white rounded-[2rem] flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg`}>
                   <span className="material-symbols-outlined text-4xl">{s.icon}</span>
                 </div>
-                <div className="text-xs font-mono font-black text-primary tracking-widest uppercase">Step {i + 1}</div>
+                <div className="text-xs font-mono font-black text-primary tracking-widest uppercase">{t('home.stepLabel')} {i + 1}</div>
                 <h3 className="text-xl font-heading font-black">{t(`home.${s.key}Title`)}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed font-light">{t(`home.${s.key}Body`)}</p>
               </motion.div>
@@ -554,20 +556,20 @@ export function HomeView() {
           <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 relative z-10">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center mb-16">
               <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/20 text-white/70 font-mono text-xs font-bold tracking-widest uppercase mb-4">
-                🇸🇦 Saudi Vision 2030 Aligned
+                {t('home.visionSectionBadge')}
               </motion.div>
               <motion.h2 variants={fadeUp} className="text-5xl lg:text-7xl font-heading font-black text-white tracking-tighter leading-tight mb-6">
-                Building the <span className="gradient-text">Future</span><br />of Saudi Education
+                {t('home.visionSectionH2pre')} <span className="gradient-text">{t('home.visionSectionH2gradient')}</span><br />{t('home.visionSectionH2post')}
               </motion.h2>
               <motion.p variants={fadeUp} className="text-white/60 text-xl max-w-2xl mx-auto font-light leading-relaxed">
-                Aligned with the Kingdom's Vision 2030 to develop human capital and create a knowledge-based economy.
+                {t('home.visionSectionBody')}
               </motion.p>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
               {[
-                { icon: 'diversity_3', label: 'Human Capital', body: 'Empowering Saudi youth with digital and technical skills for the economy of tomorrow.', stat: '28K+', statLabel: 'learners upskilled' },
-                { icon: 'business', label: 'Economic Growth', body: 'Supporting the shift from oil dependency to a diversified knowledge economy.', stat: '94%', statLabel: 'employment rate' },
-                { icon: 'public', label: 'Global Competitiveness', body: 'International-quality education delivered in Arabic, preparing graduates for global roles.', stat: '28', statLabel: 'countries represented' },
+                { icon: 'diversity_3', label: t('home.pillar1Label'), body: t('home.pillar1Body'), stat: '28K+', statLabel: t('home.pillar1StatLabel') },
+                { icon: 'business', label: t('home.pillar2Label'), body: t('home.pillar2Body'), stat: '94%', statLabel: t('home.pillar2StatLabel') },
+                { icon: 'public', label: t('home.pillar3Label'), body: t('home.pillar3Body'), stat: '28', statLabel: t('home.pillar3StatLabel') },
               ].map((pillar, i) => (
                 <motion.div
                   key={pillar.label}
@@ -626,27 +628,27 @@ export function HomeView() {
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
             <div className="flex-1 space-y-6 relative z-10">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-mono text-xs font-bold tracking-widest uppercase">
-                📱 Available on iOS & Android
+                {t('home.appBadge')}
               </div>
               <h2 className="text-4xl lg:text-5xl font-heading font-black tracking-tighter text-on-background leading-tight">
-                Learn Anywhere,<br /><span className="gradient-text">Anytime</span>
+                {t('home.appTitle')}<br /><span className="gradient-text">{t('home.appTitleGradient')}</span>
               </h2>
               <p className="text-muted-foreground text-lg leading-relaxed max-w-md font-light">
-                Download the جامعة فايرير السعودية app and continue your learning journey on the go. Offline mode, push notifications, and more.
+                {t('home.appBody')}
               </p>
               <div className="flex flex-wrap gap-4">
                 <button onClick={() => alert('التطبيق قريباً — The app is coming soon!')} className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:scale-105 transition-transform shadow-xl">
                   <span className="material-symbols-outlined text-2xl">phone_iphone</span>
                   <div className="text-left">
-                    <p className="text-[10px] text-white/60 font-mono uppercase">Coming soon on</p>
-                    <p className="text-sm font-heading font-black">App Store</p>
+                    <p className="text-[10px] text-white/60 font-mono uppercase">{t('home.comingSoonOn')}</p>
+                    <p className="text-sm font-heading font-black">{t('home.appStore')}</p>
                   </div>
                 </button>
                 <button onClick={() => alert('التطبيق قريباً — The app is coming soon!')} className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold hover:scale-105 transition-transform shadow-xl">
                   <span className="material-symbols-outlined text-2xl">android</span>
                   <div className="text-left">
-                    <p className="text-[10px] text-white/60 font-mono uppercase">Coming soon on</p>
-                    <p className="text-sm font-heading font-black">Google Play</p>
+                    <p className="text-[10px] text-white/60 font-mono uppercase">{t('home.comingSoonOn')}</p>
+                    <p className="text-sm font-heading font-black">{t('home.googlePlay')}</p>
                   </div>
                 </button>
               </div>

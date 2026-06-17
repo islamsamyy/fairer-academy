@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -12,13 +13,24 @@ const fadeUp = {
 };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1 } } };
 
-const CATEGORIES = ['All', 'General', 'Technology', 'Business', 'Design', 'Career', 'Announcement'];
+const CATEGORY_KEYS = ['All', 'General', 'Technology', 'Business', 'Design', 'Career', 'Announcement'] as const;
 
 export default function BlogPage() {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState('All');
   const [search, setSearch] = useState('');
+
+  const getCategoryLabel = (key: string) => ({
+    All: t('blog.catAll'),
+    General: t('blog.catGeneral'),
+    Technology: t('blog.catTechnology'),
+    Business: t('blog.catBusiness'),
+    Design: t('blog.catDesign'),
+    Career: t('blog.catCareer'),
+    Announcement: t('blog.catAnnouncement'),
+  } as Record<string, string>)[key] ?? key;
 
   useEffect(() => {
     async function load() {
@@ -53,13 +65,13 @@ export default function BlogPage() {
               <Image src="/logo.png" alt="جامعة فايرير السعودية" width={64} height={64} className="drop-shadow-[0_0_20px_rgba(0,200,255,0.55)] animate-float" />
             </motion.div>
             <motion.span variants={fadeUp} className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold tracking-widest uppercase mb-4">
-              جامعة فايرير السعودية
+              {t('blog.badge')}
             </motion.span>
             <motion.h1 variants={fadeUp} className="text-5xl sm:text-7xl font-heading font-black tracking-tighter text-on-background leading-tight mb-4">
-              The <span className="gradient-text">Blog</span>
+              {t('blog.heroH1pre')} <span className="gradient-text">{t('blog.heroH1gradient')}</span>
             </motion.h1>
             <motion.p variants={fadeUp} className="text-xl text-muted-foreground max-w-xl mx-auto font-light">
-              Insights, tutorials, announcements and stories from our team and community.
+              {t('blog.heroBody')}
             </motion.p>
           </motion.div>
 
@@ -70,7 +82,7 @@ export default function BlogPage() {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search articles…"
+                placeholder={t('blog.searchPlaceholder')}
                 className="w-full pl-11 pr-4 py-3.5 glass-glow rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/20 border border-white/50"
               />
             </div>
@@ -78,13 +90,13 @@ export default function BlogPage() {
 
           {/* Category pills */}
           <div className="flex flex-wrap justify-center gap-2 mt-6">
-            {CATEGORIES.map(c => (
+            {CATEGORY_KEYS.map(key => (
               <button
-                key={c}
-                onClick={() => setCategory(c)}
-                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${category === c ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'glass-glow text-muted-foreground hover:text-on-background'}`}
+                key={key}
+                onClick={() => setCategory(key)}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${category === key ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'glass-glow text-muted-foreground hover:text-on-background'}`}
               >
-                {c}
+                {getCategoryLabel(key)}
               </button>
             ))}
           </div>
@@ -102,8 +114,8 @@ export default function BlogPage() {
         ) : posts.length === 0 ? (
           <div className="text-center py-24">
             <span className="material-symbols-outlined text-6xl text-muted-foreground mb-4 block">article</span>
-            <p className="text-muted-foreground font-medium text-lg">No articles found.</p>
-            {search && <button onClick={() => setSearch('')} className="mt-4 text-primary font-bold hover:underline">Clear search</button>}
+            <p className="text-muted-foreground font-medium text-lg">{t('blog.noArticles')}</p>
+            {search && <button onClick={() => setSearch('')} className="mt-4 text-primary font-bold hover:underline">{t('blog.clearSearch')}</button>}
           </div>
         ) : (
           <>
@@ -137,10 +149,10 @@ export default function BlogPage() {
                         </div>
                         <span className="text-muted-foreground text-xs flex items-center gap-1">
                           <span className="material-symbols-outlined text-sm">visibility</span>
-                          {featured.views.toLocaleString()} views
+                          {featured.views.toLocaleString()} {t('blog.views')}
                         </span>
                         <span className="ml-auto text-primary font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                          Read more <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                          {t('blog.readMore')} <span className="material-symbols-outlined text-sm">arrow_forward</span>
                         </span>
                       </div>
                     </div>

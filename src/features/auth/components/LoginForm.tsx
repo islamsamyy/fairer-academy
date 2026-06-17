@@ -89,13 +89,13 @@ export default function LoginForm() {
       {/* Floating feature pills */}
       <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 right-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
         <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-        1,243 students online
+        {t('login.studentsOnline')}
       </motion.div>
       <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1.5 }} className="absolute bottom-12 left-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
-        🔥 62-day streak record
+        {t('login.streakRecord')}
       </motion.div>
       <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }} className="absolute top-1/3 left-6 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-accent hidden lg:flex items-center gap-2 z-10">
-        🎓 480+ courses
+        {t('login.coursesCount')}
       </motion.div>
 
       {/* Login Container */}

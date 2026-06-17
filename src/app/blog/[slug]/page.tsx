@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function BlogPostPage() {
   const { slug } = useParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const [post, setPost] = useState<any>(null);
   const [related, setRelated] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export default function BlogPostPage() {
         <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
           <span className="material-symbols-outlined text-primary text-3xl">article</span>
         </div>
-        <p className="text-muted-foreground font-medium">Loading article…</p>
+        <p className="text-muted-foreground font-medium">{t('blog.loadingArticle')}</p>
       </div>
     </div>
   );
@@ -74,9 +76,9 @@ export default function BlogPostPage() {
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono mb-6">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+          <Link href="/" className="hover:text-primary transition-colors">{t('blog.homeLink')}</Link>
           <span>/</span>
-          <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
+          <Link href="/blog" className="hover:text-primary transition-colors">{t('blog.blogLink')}</Link>
           <span>/</span>
           <span className="text-on-background truncate max-w-[200px]">{post.title}</span>
         </div>
@@ -134,7 +136,7 @@ export default function BlogPostPage() {
         <div className="mt-16 flex items-center justify-between flex-wrap gap-4 py-6 border-t border-outline-variant/20">
           <Link href="/blog" className="flex items-center gap-2 text-primary font-bold hover:gap-3 transition-all">
             <span className="material-symbols-outlined text-sm">arrow_back</span>
-            Back to Blog
+            {t('blog.backToBlog')}
           </Link>
           <button
             onClick={() => {
@@ -142,20 +144,20 @@ export default function BlogPostPage() {
                 navigator.share({ title: post.title, url: window.location.href });
               } else {
                 navigator.clipboard.writeText(window.location.href);
-                alert('Link copied!');
+                alert(t('blog.linkCopied'));
               }
             }}
             className="flex items-center gap-2 px-5 py-2.5 glass-glow rounded-xl font-bold text-sm hover:bg-white transition-all"
           >
             <span className="material-symbols-outlined text-sm">share</span>
-            Share
+            {t('blog.share')}
           </button>
         </div>
 
         {/* Related posts */}
         {related.length > 0 && (
           <div className="mt-16">
-            <h2 className="text-2xl font-heading font-black text-on-background mb-6">Related Articles</h2>
+            <h2 className="text-2xl font-heading font-black text-on-background mb-6">{t('blog.relatedArticles')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {related.map(r => (
                 <Link key={r.id} href={`/blog/${r.slug}`} className="group block glass-glow rounded-2xl overflow-hidden card-hover-glow">

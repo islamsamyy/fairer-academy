@@ -59,7 +59,7 @@ export default function ScholarshipsPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold animate-pulse">Loading scholarships…</div>;
+    return <div className="min-h-screen bg-surface flex items-center justify-center text-primary font-bold animate-pulse">{t('scholarships.loading')}</div>;
   }
 
   return (
@@ -77,7 +77,7 @@ export default function ScholarshipsPage() {
           <div className="max-w-2xl mx-auto bg-white p-12 rounded-3xl border border-outline-variant/10 shadow-xl shadow-primary/5 text-center">
             <div className="flex items-center gap-2 px-6 py-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-600 font-bold w-fit mx-auto">
               <span className="material-symbols-outlined">event</span>
-              New scholarships opening soon
+              {t('scholarships.openingSoon')}
             </div>
           </div>
         ) : (
@@ -102,20 +102,20 @@ export default function ScholarshipsPage() {
                   </div>
                   <p className="text-on-surface-variant text-sm leading-relaxed mb-5 flex-1">{s.description}</p>
                   <div className="flex flex-wrap gap-4 text-xs text-outline font-mono mb-5">
-                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">event_seat</span>{s.seats} seat{s.seats !== 1 ? 's' : ''}</span>
+                    <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">event_seat</span>{s.seats} {s.seats !== 1 ? t('scholarships.seats') : t('scholarships.seat')}</span>
                     {s.deadline && <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm">schedule</span>{new Date(s.deadline).toLocaleDateString()}</span>}
                   </div>
                   {applied ? (
                     <div className="w-full py-3 rounded-2xl bg-emerald-50 text-emerald-700 font-bold text-center text-sm flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-sm">check_circle</span> Application submitted
+                      <span className="material-symbols-outlined text-sm">check_circle</span> {t('scholarships.applied')}
                     </div>
                   ) : !userId ? (
                     <Link href="/login?redirect=/scholarships" className="w-full py-3 rounded-2xl bg-primary text-white font-bold text-center text-sm hover:opacity-90 transition-opacity">
-                      Sign in to apply
+                      {t('scholarships.signInToApply')}
                     </Link>
                   ) : (
                     <button onClick={() => setApplyTarget(s)} className="w-full py-3 rounded-2xl bg-gradient-to-br from-primary to-primary-container text-white font-bold text-sm hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
-                      Apply Now
+                      {t('scholarships.applyNow')}
                     </button>
                   )}
                 </motion.div>
@@ -135,20 +135,20 @@ export default function ScholarshipsPage() {
             className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl"
           >
             <h2 className="text-xl font-headline font-bold text-on-surface mb-1">Apply: {applyTarget.title}</h2>
-            <p className="text-sm text-outline mb-5">Tell us why you're a great fit for this scholarship.</p>
+            <p className="text-sm text-outline mb-5">{t('scholarships.applyModalDesc')}</p>
             <textarea
               value={motivation}
               onChange={e => setMotivation(e.target.value)}
               rows={5}
-              placeholder="Your motivation…"
+              placeholder={t('scholarships.motivationPlaceholder')}
               className="w-full px-4 py-3 rounded-xl border border-outline-variant/20 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
             />
             <div className="flex gap-3 mt-5">
               <button onClick={submitApplication} disabled={submitting} className="flex-1 py-3 rounded-xl bg-primary text-white font-bold text-sm hover:opacity-90 disabled:opacity-50">
-                {submitting ? 'Submitting…' : 'Submit Application'}
+                {submitting ? t('scholarships.submitting') : t('scholarships.submitApplication')}
               </button>
               <button onClick={() => setApplyTarget(null)} className="flex-1 py-3 rounded-xl bg-surface-container text-on-surface font-bold text-sm hover:bg-surface-container-high">
-                Cancel
+                {t('scholarships.cancel')}
               </button>
             </div>
           </motion.div>

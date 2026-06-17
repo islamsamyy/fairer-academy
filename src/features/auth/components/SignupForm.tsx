@@ -97,10 +97,10 @@ export default function SignupForm() {
       <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-amber-300/12 rounded-full blur-[70px] animate-blob-slow pointer-events-none z-0" />
       {/* Floating pills */}
       <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-8 left-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-primary hidden md:flex items-center gap-2 z-10">
-        🚀 Join 28K+ learners
+        {t('signup.joinLearners')}
       </motion.div>
       <motion.div animate={{ y: [0, 14, 0] }} transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 2 }} className="absolute bottom-12 right-8 glass-glow px-4 py-2 rounded-full text-xs font-mono font-bold text-emerald-600 hidden md:flex items-center gap-2 z-10">
-        ✅ Free to start
+        {t('signup.freeToStart')}
       </motion.div>
 
       <main className="w-full max-w-[480px] relative z-10">
@@ -129,7 +129,7 @@ export default function SignupForm() {
               <h1 className="font-headline text-4xl font-bold tracking-tight text-on-background mb-2">
                 جامعة فايرير السعودية
               </h1>
-              <p className="text-on-surface-variant font-body">Empowering your journey with equity</p>
+              <p className="text-on-surface-variant font-body">{t('signup.empowering')}</p>
             </motion.header>
 
             <form className="space-y-6" onSubmit={handleSignup}>
@@ -155,7 +155,7 @@ export default function SignupForm() {
                       : 'bg-surface-container-low text-on-surface-variant border-transparent hover:bg-surface-container'
                   }`}
                 >
-                  I'm a Student
+                  {t('signup.iAmStudent')}
                 </button>
                 <button
                   type="button"
@@ -166,7 +166,7 @@ export default function SignupForm() {
                       : 'bg-surface-container-low text-on-surface-variant border-transparent hover:bg-surface-container'
                   }`}
                 >
-                  I'm an Instructor
+                  {t('signup.iAmInstructor')}
                 </button>
               </motion.div>
 
@@ -273,9 +273,9 @@ export default function SignupForm() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-[10px] uppercase tracking-wider text-primary font-bold">
-                      Strong Security
+                      {t('signup.strongSecurity')}
                     </span>
-                    <span className="text-[10px] text-outline-variant font-medium">Min 12 chars</span>
+                    <span className="text-[10px] text-outline-variant font-medium">{t('signup.minChars')}</span>
                   </div>
                 </div>
               </motion.div>
@@ -291,13 +291,13 @@ export default function SignupForm() {
                   />
                 </div>
                 <label className="text-sm text-on-surface-variant leading-relaxed" htmlFor="terms">
-                  I agree to the{' '}
+                  {t('signup.termsAgree')}{' '}
                   <Link href="/terms" className="text-primary font-semibold hover:underline outline-none">
-                    Terms of Mastery
+                    {t('signup.termsLink')}
                   </Link>{' '}
-                  and{' '}
+                  {t('signup.andText')}{' '}
                   <Link href="/privacy" className="text-primary font-semibold hover:underline outline-none">
-                    Privacy Protocol
+                    {t('signup.privacyLink')}
                   </Link>
                   .
                 </label>

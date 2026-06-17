@@ -15,26 +15,26 @@ const itemVariants: Variants = {
   visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100, damping: 20 } },
 };
 
-const categories = [
-  { icon: 'school', title: 'Courses & Enrollment', desc: 'Course access, certificates, and progress', href: '/courses' },
-  { icon: 'payments', title: 'Billing & Payments', desc: 'Refunds, invoices, and subscriptions', href: '/dashboard/orders' },
-  { icon: 'settings', title: 'Account & Security', desc: 'Login issues, privacy, and settings', href: '/settings' },
-  { icon: 'devices', title: 'Technical Support', desc: 'App issues, downloads, and performance', href: '/support/contact' },
-  { icon: 'group', title: 'Community & Forum', desc: 'Guidelines, moderation, and conduct', href: '/support/community' },
-  { icon: 'workspace_premium', title: 'Certificates', desc: 'Earn and download your certificates', href: '/certificates' },
-];
-
-const faqs = [
-  { q: 'How do I reset my password?', a: 'Go to Settings > Security > Change Password. You can also reset from the login page by clicking "Forgot Password".' },
-  { q: 'Can I get a refund after enrolling?', a: 'Yes, we offer a 30-day money-back guarantee on all courses. Contact our support team to initiate a refund.' },
-  { q: 'How do I download my certificate?', a: 'Once you complete a course, visit your Certificates page. Click the PDF button to download your certificate.' },
-  { q: 'Is my payment information secure?', a: 'Absolutely. We use 256-bit SSL encryption and never store your full card details on our servers.' },
-];
-
 export default function SupportPage() {
   const { t } = useLanguage();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [query, setQuery] = useState('');
+
+  const categories = [
+    { icon: 'school', title: t('support.cat1Title'), desc: t('support.cat1Desc'), href: '/courses' },
+    { icon: 'payments', title: t('support.cat2Title'), desc: t('support.cat2Desc'), href: '/dashboard/orders' },
+    { icon: 'settings', title: t('support.cat3Title'), desc: t('support.cat3Desc'), href: '/settings' },
+    { icon: 'devices', title: t('support.cat4Title'), desc: t('support.cat4Desc'), href: '/support/contact' },
+    { icon: 'group', title: t('support.cat5Title'), desc: t('support.cat5Desc'), href: '/support/community' },
+    { icon: 'workspace_premium', title: t('support.cat6Title'), desc: t('support.cat6Desc'), href: '/certificates' },
+  ];
+
+  const faqs = [
+    { q: t('support.faq1Q'), a: t('support.faq1A') },
+    { q: t('support.faq2Q'), a: t('support.faq2A') },
+    { q: t('support.faq3Q'), a: t('support.faq3A') },
+    { q: t('support.faq4Q'), a: t('support.faq4A') },
+  ];
 
   const q = query.trim().toLowerCase();
   const filteredFaqs = q
@@ -102,13 +102,13 @@ export default function SupportPage() {
                     <h3 className="font-headline font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">{cat.title}</h3>
                     <p className="text-xs text-outline mb-3">{cat.desc}</p>
                     <span className="text-[10px] font-mono font-bold text-primary flex items-center gap-1">
-                      Open <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                      {t('support.open')} <span className="material-symbols-outlined text-[14px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
                     </span>
                   </Link>
                 </motion.div>
               ))}
               {filteredCategories.length === 0 && (
-                <p className="text-on-surface-variant col-span-full text-center py-6">No topics match "{query}"</p>
+                <p className="text-on-surface-variant col-span-full text-center py-6">{t('support.noTopics')} "{query}"</p>
               )}
             </motion.div>
           </section>
@@ -118,7 +118,7 @@ export default function SupportPage() {
             <h2 className="text-2xl font-headline font-bold text-on-surface mb-6">{t('support.faqTitle')}</h2>
             <div className="space-y-3 max-w-3xl">
               {filteredFaqs.length === 0 && (
-                <p className="text-on-surface-variant py-4">No answers match "{query}". Try <Link href="/support/contact" className="text-primary font-bold hover:underline">contacting us</Link>.</p>
+                <p className="text-on-surface-variant py-4">{t('support.noAnswers')} "{query}". <Link href="/support/contact" className="text-primary font-bold hover:underline">{t('support.tryContact')}</Link>.</p>
               )}
               {filteredFaqs.map((faq, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-outline-variant/10 overflow-hidden">

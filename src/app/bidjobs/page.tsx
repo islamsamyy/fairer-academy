@@ -42,13 +42,13 @@ export default function BidJobsPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <div className="flex items-center gap-2 px-6 py-4 bg-primary/5 border border-primary/10 rounded-2xl text-primary font-bold">
             <span className="material-symbols-outlined">rocket_launch</span>
-            Launching Soon
+            {t('bidjobs.launchingSoon')}
           </div>
           <button
             onClick={() => setShowForm(true)}
             className="px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95"
           >
-            Get Notified
+            {t('bidjobs.getNotified')}
           </button>
         </div>
 
@@ -62,7 +62,7 @@ export default function BidJobsPage() {
             >
               {status === 'done' ? (
                 <p className="mt-8 p-4 bg-emerald-50 text-emerald-700 rounded-2xl font-bold text-sm">
-                  ✅ You're on the list! We'll email you when BidJobs launches.
+                  {t('bidjobs.onTheList')}
                 </p>
               ) : (
                 <form onSubmit={handleNotify} className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -71,7 +71,7 @@ export default function BidJobsPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
+                    placeholder={t('bidjobs.emailPlaceholder')}
                     className="px-5 py-3.5 bg-surface-container-low rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 text-sm font-medium w-full sm:w-72"
                   />
                   <button
@@ -79,12 +79,12 @@ export default function BidJobsPage() {
                     disabled={status === 'sending'}
                     className="px-6 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm disabled:opacity-60 hover:bg-primary/90 transition-colors"
                   >
-                    {status === 'sending' ? 'Saving…' : 'Notify Me'}
+                    {status === 'sending' ? t('bidjobs.saving') : t('bidjobs.notifyMe')}
                   </button>
                 </form>
               )}
               {status === 'error' && (
-                <p className="mt-3 text-destructive text-sm font-medium">Something went wrong — please try again.</p>
+                <p className="mt-3 text-destructive text-sm font-medium">{t('bidjobs.errorMsg')}</p>
               )}
             </motion.div>
           )}
