@@ -105,19 +105,22 @@ export default function Header() {
         <div className="max-w-screen-2xl mx-auto flex justify-between items-center px-4 sm:px-8 h-16">
           {/* Logo + Brand */}
           <div className="flex items-center gap-3 sm:gap-8">
-            <Link href="/" className="flex items-center gap-3 active:scale-95 transition-all group">
-              <div className="relative">
+            <Link href="/" className="flex items-center gap-2.5 active:scale-95 transition-all group">
+              <div className="relative flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br from-primary/10 to-cyan-400/10 border border-primary/15 group-hover:border-primary/40 transition-all duration-300">
                 <Image
                   src="/logo.png"
                   alt="جامعة فايرير السعودية"
-                  width={42}
-                  height={42}
-                  className="relative z-10 group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(0,240,255,0.4)]"
+                  width={36}
+                  height={36}
+                  className="relative z-10 group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_0_10px_rgba(0,200,255,0.6)]"
                 />
               </div>
-              <span className="font-heading text-2xl font-black tracking-tighter text-slate-900 flex items-center">
-                جامعة فايرير السعودية<span className="text-primary">.</span>
-              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-heading text-base font-black tracking-tight text-slate-900">
+                  جامعة فايرير <span className="text-primary">السعودية</span>
+                </span>
+                <span className="text-[9px] font-mono text-slate-400 tracking-widest uppercase hidden sm:block">FAiRER Academy</span>
+              </div>
             </Link>
 
             {/* Desktop Nav */}

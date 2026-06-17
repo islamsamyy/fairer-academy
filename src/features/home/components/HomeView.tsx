@@ -141,9 +141,35 @@ export function HomeView() {
             </motion.div>
 
             <motion.div variants={fadeUp} className="w-full md:w-1/2 relative">
-              <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-700 border-8 border-white animate-glow">
-                <img alt="Faireer Future Visualization" className="w-full h-full object-cover scale-110" src="/hero-v2.png" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent" />
+              <div className="relative aspect-square rounded-[3rem] overflow-hidden shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-700 border-4 border-white/20 animate-glow bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900">
+                {/* Background glow blobs */}
+                <div className="absolute top-1/4 left-1/4 w-56 h-56 bg-primary/25 rounded-full blur-[70px] animate-blob pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-cyan-400/15 rounded-full blur-[60px] animate-blob-delay pointer-events-none" />
+                {/* Grid pattern overlay */}
+                <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'linear-gradient(rgba(0,200,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(0,200,255,0.8) 1px, transparent 1px)', backgroundSize: '36px 36px' }} />
+                {/* Center logo */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative flex flex-col items-center gap-4">
+                    <div className="absolute w-64 h-64 bg-primary/15 rounded-full blur-[50px]" />
+                    <Image
+                      src="/logo.png"
+                      alt="جامعة فايرير السعودية"
+                      width={260}
+                      height={260}
+                      className="relative z-10 drop-shadow-[0_0_50px_rgba(0,200,255,0.9)] animate-float"
+                    />
+                  </div>
+                </div>
+                {/* Academy name bottom */}
+                <div className="absolute bottom-8 left-0 right-0 text-center z-20">
+                  <p className="font-heading font-black text-white text-lg tracking-tight drop-shadow-lg">جامعة فايرير السعودية</p>
+                  <p className="text-primary/80 text-xs font-mono tracking-widest mt-1">FAiRER ACADEMY</p>
+                </div>
+                {/* Corner badges */}
+                <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
+                  <span className="px-3 py-1 bg-primary/20 border border-primary/30 rounded-full text-primary text-[10px] font-mono font-bold backdrop-blur-sm">1447هـ</span>
+                  <span className="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-white/70 text-[10px] font-mono backdrop-blur-sm">Vision 2030 ✦</span>
+                </div>
               </div>
               {/* Floating glass card */}
               <motion.div
