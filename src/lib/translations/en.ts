@@ -192,7 +192,7 @@ const en = {
     teamTag: 'The People Behind It',
     teamTitle: 'Leadership Team',
     team1Name: 'م. إسلام سامي',
-    team1Role: 'Executive Director',
+    team1Role: 'Data Engineer & CEO',
     team1Bio: 'Founder of FAiRER Academy, specialist in e-learning and Saudi cultural heritage.',
     team2Name: 'عبدالعزيز الفايـر',
     team2Role: 'Deputy Director & Co-Founder',
